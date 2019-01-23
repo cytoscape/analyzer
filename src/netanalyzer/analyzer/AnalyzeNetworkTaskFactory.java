@@ -34,8 +34,9 @@ import org.cytoscape.task.analyze.AnalyzeNetworkCollectionTaskFactory;
 import org.cytoscape.work.TaskIterator;
 
 public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFactory implements AnalyzeNetworkCollectionTaskFactory {
-	CySwingApplication app; 
-	CyServiceRegistrar reg;
+	private final CySwingApplication app; 
+	private final CyServiceRegistrar reg;
+	
 	public AnalyzeNetworkTaskFactory(CyServiceRegistrar registrar, CySwingApplication desktop)
 	{
 		reg = registrar;

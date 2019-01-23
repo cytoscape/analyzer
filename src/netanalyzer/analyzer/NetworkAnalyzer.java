@@ -36,9 +36,11 @@ import java.util.Set;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.model.subnetwork.CySubNetwork;
 
 /**
@@ -79,9 +81,18 @@ public abstract class NetworkAnalyzer {
 		return progress;
 	}
 
+	static String columnName = "statistics";
 	public void doOutput()
 	{
 		String out = stats.output();
+		CyTable netTable = network.getDefaultNetworkTable();
+		CyColumn col = netTable.getColumn(columnName);
+		if (col == null)
+		{
+			netTable.createColumn(columnName, String.class, true);
+			col = netTable.getColumn(columnName);
+		}
+		netTable.getRow(network.getSUID()).set(columnName, out);
 		CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 		int nPanels = panel.getCytoPanelComponentCount();
 		if (nPanels > 0)

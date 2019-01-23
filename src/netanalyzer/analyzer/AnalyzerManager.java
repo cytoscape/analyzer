@@ -13,7 +13,7 @@ import org.cytoscape.work.TaskObserver;
 
 public class AnalyzerManager {
 
-	final TaskManager taskManager;
+	final TaskManager<?, ?> taskManager;
 
 	final CyServiceRegistrar registrar; 
 	final HashMap<String, String> settings;
@@ -24,26 +24,12 @@ public class AnalyzerManager {
 		settings = new HashMap<String, String>();
 	}
 
+	public String getSetting(String setting) {		return settings.get(setting);	}
 
-	public String getSetting(String setting) {
-		return settings.get(setting);
-	}
-
-	public void setSetting(String setting, double value) {
-		setSetting(setting, String.valueOf(value));
-	}
-
-	public void setSetting(String setting, int value) {
-		setSetting(setting, String.valueOf(value));
-	}
-
-	public void setSetting(String setting, boolean value) {
-		setSetting(setting, String.valueOf(value));
-	}
-
-	public void setSetting(String setting, String value) {
-		settings.put(setting, value);
-	}
+	public void setSetting(String setting, double value) {		setSetting(setting, String.valueOf(value));	}
+	public void setSetting(String setting, int value) 	{		setSetting(setting, String.valueOf(value));	}
+	public void setSetting(String setting, boolean value) {		setSetting(setting, String.valueOf(value));	}
+	public void setSetting(String setting, String value) { 		settings.put(setting, value);	}
 
 	public void executeCommand(String namespace, String command, Map<String, Object> args, boolean synchronous) {
 		executeCommand(namespace, command, args, null, synchronous);

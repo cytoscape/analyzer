@@ -63,7 +63,16 @@ public class ResultsPanel extends JPanel
 	@Override
 	public void handleEvent(SetCurrentNetworkEvent scne) {
 		network = scne.getNetwork();
-		label.setText("network change to " + network.getSUID());
+		String stats = "No Network Selected";
+		if (network != null) 
+		{
+			if (network.getNodeCount() < 1 || network.getEdgeCount() < 1)
+				stats = "Empty Network";
+			else stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
+		if (stats == null)
+			stats = "Tools >> Analyze Network\nto calculate statistics";
+		}
+		label.setText(stats);
 	}
 
 	@Override	public Component getComponent() {		return this;	}
