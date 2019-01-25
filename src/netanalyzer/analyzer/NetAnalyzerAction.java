@@ -1,37 +1,11 @@
 package analyzer;
 
-/*
- * #%L
- * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
- * $Id:$
- * $HeadURL:$
- * %%
- * Copyright (C) 2006 - 2013
- *   Max Planck Institute for Informatics, Saarbruecken, Germany
- *   The Cytoscape Consortium
- * %%
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
- * License along with this program.  If not, see
- * <http://www.gnu.org/licenses/lgpl-2.1.html>.
- * #L%
- */
-
 import java.util.Map;
 
-import org.cytoscape.model.CyNetwork;
-import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.view.model.CyNetworkViewManager;
 
 /**
  * Base class for all NetworkAnalyzer actions which operate on a single network.
@@ -60,9 +34,9 @@ public abstract class NetAnalyzerAction extends AbstractCyAction {
 	}
 
 	protected NetAnalyzerAction(final String aName, final CyApplicationManager appMgr,
-			final Map<String, String> configProps,
+			final Map<String,String> configProps,
 			final CyNetworkViewManager networkViewManager) {
-		super(configProps, appMgr, networkViewManager);
+		super( configProps, appMgr, networkViewManager);
 		this.applicationManager = appMgr;
 		network = null;
 	}
@@ -83,7 +57,6 @@ public abstract class NetAnalyzerAction extends AbstractCyAction {
 	 * @return <code>true</code> if a network targeting analysis has been
 	 *         identified, <code>false</code> otherwise.
 	 */
-	@SuppressWarnings("fallthrough")
 	protected boolean selectNetwork() {
 		network = applicationManager.getCurrentNetwork();
 		if (network == null) {
