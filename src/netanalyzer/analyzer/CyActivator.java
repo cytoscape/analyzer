@@ -39,13 +39,10 @@ import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
 import static org.cytoscape.work.ServiceProperties.PREFERRED_MENU;
 import static org.cytoscape.work.ServiceProperties.TITLE;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
-import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -54,6 +51,7 @@ import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
 
@@ -74,15 +72,15 @@ public class CyActivator extends AbstractCyActivator {
 
 		Properties props = new Properties();
 		
-		{	// create and register the task factory to be able to run the analysis
+		{	// create and register the task factory to run the analysis
 			props.clear();
-//	??? Do we need the AnalyzeNetworkAction below if we assign the menu props to the taskFactory?
-//			props.put(ID, "analyzeNetworkTaskFactory");	
-//			props.put(TITLE, "Analyze Network");
-//			props.put(PREFERRED_MENU,"Tools");
-//			props.put(MENU_GRAVITY,"9.0");
-//			props.put(IN_TOOL_BAR, "false");
-//			props.put(ENABLE_FOR, "network");
+			props.put(ID, "analyzeNetworkTaskFactory");	
+			props.put(TITLE, "Analyze Network1");
+			props.put(PREFERRED_MENU,"Tools");
+			props.put(MENU_GRAVITY,"9.1");
+			props.put(IN_MENU_BAR, "true");
+			props.put(IN_TOOL_BAR, "false");
+			props.put(ENABLE_FOR, "network");
 			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "analyze");
 			props.put(COMMAND_DESCRIPTION,  "Calculate statistics on the current network");
@@ -91,31 +89,37 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(COMMAND_SUPPORTS_JSON, "true");
 
 			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
-			registerService(bc,analyzeNetworkTaskFactory, AnalyzeNetworkTaskFactory.class, props);
+			registerService(bc,analyzeNetworkTaskFactory, AbstractTaskFactory.class, props);
 		}
 
 		{	// create and register the results panel, 
-			// and listen for network change events, so we always show the current network stats
+			// and listen for network change events, 
+			// so we always show the current network stats
 			ResultsPanel resultsPanel = new ResultsPanel(manager);
 			registerService(bc, resultsPanel, CytoPanelComponent.class);
 			registerService(bc, resultsPanel, SetCurrentNetworkListener.class);
 			CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 			panel.setState(CytoPanelState.DOCK);
 		}
-
-		{	// create and register the action to be added to the Tools menu
-			props.clear();
-			props.put(ID, "analyzeNetworkAction");
-			props.put(TITLE, "Analyze Network");
-			props.put(PREFERRED_MENU,"Tools");
-			props.put(MENU_GRAVITY,"9.0");
-			props.put(IN_TOOL_BAR, "false");
-			props.put(ENABLE_FOR, "network");
-	
-			Map<String, String> map = (Map)props;
-			AnalyzeNetworkAction analyzeNetworkAction = new AnalyzeNetworkAction(appMgr,viewMgr, map, manager, desktop);
-			registerService(bc,analyzeNetworkAction,CyAction.class, props);
-		}
+//
+//		{	// create and register the action to be added to the Tools menu
+//			props.clear();
+//			props.put(ID, "analyzeNetworkAction");
+//			props.put(TITLE, "Analyze Network");
+//			props.put(PREFERRED_MENU,"Tools");
+//			props.put(MENU_GRAVITY,"9.0");
+//			props.put(IN_TOOL_BAR, "false");
+//			props.put(ENABLE_FOR, "network");
+//			props.put(COMMAND, "analyze");
+//			props.put(COMMAND_DESCRIPTION,  "Calculate statistics on the current network");
+//			props.put(COMMAND_LONG_DESCRIPTION, "Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
+//			props.put(COMMAND_EXAMPLE_JSON, "{}");
+//			props.put(COMMAND_SUPPORTS_JSON, "true");
+//	
+//			Map<String, String> map = (Map)props;
+//			AnalyzeNetworkAction analyzeNetworkAction = new AnalyzeNetworkAction(appMgr,viewMgr, map, manager, desktop);
+//			registerService(bc,analyzeNetworkAction,CyAction.class, props);
+//		}
 		
 	}
 }

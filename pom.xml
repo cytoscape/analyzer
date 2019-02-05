@@ -19,7 +19,7 @@
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 
-	<version>4.0.0</version>
+	<version>4.0.1</version>
 
 	<scm>
 		<connection>scm:git:git://github.com/cytoscape/network-analyzer.git</connection>

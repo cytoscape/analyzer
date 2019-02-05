@@ -29,11 +29,11 @@ import java.util.Collection;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
-import org.cytoscape.task.AbstractNetworkCollectionTaskFactory;
+import org.cytoscape.task.AbstractNetworkTaskFactory;
 import org.cytoscape.task.analyze.AnalyzeNetworkCollectionTaskFactory;
 import org.cytoscape.work.TaskIterator;
 
-public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFactory implements AnalyzeNetworkCollectionTaskFactory {
+public class AnalyzeNetworkTaskFactory extends AbstractNetworkTaskFactory {
 	private final CySwingApplication app; 
 	private final CyServiceRegistrar reg;
 	
@@ -43,8 +43,8 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 		app = desktop;
 	}
 	@Override
-	public TaskIterator createTaskIterator(Collection<CyNetwork> networks) {
-		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app));
+	public TaskIterator createTaskIterator(CyNetwork network) {
+		return new TaskIterator(new AnalyzeNetworkTask(network, reg, app));
 	}
 
 }

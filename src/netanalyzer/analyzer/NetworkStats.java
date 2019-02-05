@@ -132,7 +132,7 @@ public class NetworkStats {
 			if (val instanceof String || val instanceof Integer)
 				out.append(key).append(":\t ").append(val).append('\n');
 			if (val instanceof Double )
-				out.append(String.format("%s:\t %.2f\n", key ,val));
+				out.append(String.format("%s\t%.2f\n", key ,val));
 		}
 		return out.toString();
 	}
