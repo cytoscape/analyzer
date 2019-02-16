@@ -65,11 +65,20 @@ public class ResultsPanel extends JPanel
 		{
 			if (network.getNodeCount() < 1 || network.getEdgeCount() < 1)
 				stats = "Empty Network";
-			else stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
-		if (stats == null)
-			stats = "Tools >> Analyze Network\nto calculate statistics";
+			else 
+			{
+				stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
+				stats = parseJson(stats);
+			}
+			if (stats == null)
+				stats = "Tools >> Analyze Network\nto calculate statistics";
 		}
+		
 		label.setText(stats);
+	}
+
+	private String parseJson(String stats) {
+		return stats;
 	}
 
 	@Override	public Component getComponent() {		return this;	}

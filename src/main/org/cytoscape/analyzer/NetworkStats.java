@@ -117,17 +117,20 @@ public class NetworkStats {
 
 	public void dump()
 	{
-		System.out.println(output());
+		System.out.println(jsonOutput(params));
 	}
 	
-	String[] keys = {"nodeCount", "avNeighbors", "diameter", "radius", "avSpl",
+	String[] keys = {"networkTitle", "", "nodeCount", "avNeighbors", "diameter", "radius", "avSpl",
 			"", "cc", "density", 	"heterogeneity", "centralization", 
 			"", "ncc", "mnp", "nsl", "", "time"	};
 
-	public String output()
+
+	String inQuotes(String s)	{ return '"' + s + '"'; }
+	
+	boolean formatted = false;
+	public String jsonOutput( Map<String, Object> parmMap)
 	{
-		String title = params.get("networkTitle") + "\n\n"; 
-		StringBuilder out = new StringBuilder(title);
+		StringBuilder out = new StringBuilder("{ \n");  
 		
 		for (String key : keys)
 		{
@@ -135,7 +138,26 @@ public class NetworkStats {
 				out.append("\n");
 			else
 			{
-				Object val = params.get(key);
+				Object val = parmMap.get(key);
+				out.append("\t").append(inQuotes(key)).append(": ").append(inQuotes(val.toString())).append(",\n");
+			}
+		}
+		int len = out.length();
+		out = out.delete(len-2,  len);
+		out.append("\n}\n");
+		return out.toString();
+	}
+	
+	public String formattedOutput( Map<String, Object> parmMap)
+	{
+		StringBuilder out = new StringBuilder();	
+		for (String key : keys)
+		{
+			if (key == null || key.trim().length() == 0)
+				out.append("\n");
+			else
+			{
+				Object val = parmMap.get(key);
 				String s = Msgs.get(key);
 				if (s != null) 
 					key = s;
@@ -148,6 +170,31 @@ public class NetworkStats {
 		return out.toString();
 	}
 
+	public Map<String, Object> jsonToMap(String json)
+	{
+		String[] lines = json.split("\n");
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		for (String line : lines)
+		{
+			if (line.trim().length() == 0) continue;
+			String[] tokens = line.split(":");
+			if (tokens.length < 2) continue;
+			String key = clean(tokens[0]);
+			String val = clean(tokens[1]);
+			map.put(key,val);
+		}
+		return map;
+	}
+	
+	String clean(String in)
+	{
+		
+		String trimmed = in.trim();
+		if (trimmed.charAt(0) == '"')
+			return(trimmed.substring(1, trimmed.length()-1));
+		return trimmed;
+	}
 	/**
 	 * Checks if the specified parameter is computed.
 	 *
@@ -320,6 +367,7 @@ public class NetworkStats {
 	/**
 	 * Network parameters in the form of a (ID, value) map.
 	 */
+	public Map<String, Object> getParameters() { return params;	}
 	private Map<String, Object> params;
 	
 	/**

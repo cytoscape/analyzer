@@ -1,5 +1,7 @@
 package org.cytoscape.analyzer;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
@@ -25,7 +27,9 @@ package org.cytoscape.analyzer;
  */
 
 import java.util.Collection;
+import java.util.List;
 
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
@@ -48,11 +52,16 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 	}
 	@Override
 	public TaskIterator createTaskIterator() {
-		return null;
+		CyApplicationManager appMgr = reg.getService(CyApplicationManager.class);
+		CyNetwork current = appMgr.getCurrentNetwork();
+		 List<CyNetwork> networks = new ArrayList<CyNetwork>();
+		 networks.add(current);
+		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app));
+
 	}
 	@Override
 	public boolean isReady() {
-		return false;
+		return true;
 	}
 
 }

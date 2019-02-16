@@ -85,7 +85,7 @@ public abstract class NetworkAnalyzer {
 	static String columnName = "statistics";
 	public void doOutput()
 	{
-		String out = stats.output();
+		String out = stats.formattedOutput(stats.getParameters());
 		CyTable netTable = network.getDefaultNetworkTable();
 		CyColumn col = netTable.getColumn(columnName);
 		if (col == null)
@@ -100,16 +100,14 @@ public abstract class NetworkAnalyzer {
 		if (nPanels > 0)
 		{
 			Component comp = panel.getComponentAt(0);
-//			comp.setBackground(Color.RED);
 			if (comp instanceof ResultsPanel)
 			{
 				ResultsPanel results = (ResultsPanel) comp;
-				System.out.println(results.getIdentifier());
 				results.setResultString(out);
 			}
 		}
 			
-		stats.dump();
+//		stats.dump();
 	}
 
 	/**
