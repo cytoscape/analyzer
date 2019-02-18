@@ -112,6 +112,7 @@ public class NetworkStats {
 		params = new HashMap<String, Object>();
 		set("networkTitle", aNetwork.getRow(aNetwork).get("name",String.class) + aInterpretName);
 		set("nodeCount", new Integer(aNetwork.getNodeCount()));
+		set("edgeCount", new Integer(aNetwork.getEdgeCount()));
 		network = aNetwork;
 	}
 
@@ -120,7 +121,7 @@ public class NetworkStats {
 		System.out.println(jsonOutput(params));
 	}
 	
-	String[] keys = {"networkTitle", "", "nodeCount", "avNeighbors", "diameter", "radius", "avSpl",
+	static String[] keys = {"networkTitle", "", "nodeCount", "edgeCount", "avNeighbors", "diameter", "radius", "avSpl",
 			"", "cc", "density", 	"heterogeneity", "centralization", 
 			"", "ncc", "mnp", "nsl", "", "time"	};
 
@@ -128,6 +129,8 @@ public class NetworkStats {
 	String inQuotes(String s)	{ return '"' + s + '"'; }
 	
 	boolean formatted = false;
+	public String jsonOutput(){		return jsonOutput(params);	}
+
 	public String jsonOutput( Map<String, Object> parmMap)
 	{
 		StringBuilder out = new StringBuilder("{ \n");  
@@ -139,6 +142,7 @@ public class NetworkStats {
 			else
 			{
 				Object val = parmMap.get(key);
+				if (val == null) continue;
 				out.append("\t").append(inQuotes(key)).append(": ").append(inQuotes(val.toString())).append(",\n");
 			}
 		}
@@ -148,7 +152,7 @@ public class NetworkStats {
 		return out.toString();
 	}
 	
-	public String formattedOutput( Map<String, Object> parmMap)
+	public static String formattedOutput( Map<String, Object> parmMap)
 	{
 		StringBuilder out = new StringBuilder();	
 		for (String key : keys)
@@ -169,32 +173,10 @@ public class NetworkStats {
 		}
 		return out.toString();
 	}
-
-	public Map<String, Object> jsonToMap(String json)
-	{
-		String[] lines = json.split("\n");
-		Map<String, Object> map = new HashMap<String, Object>();
-		
-		for (String line : lines)
-		{
-			if (line.trim().length() == 0) continue;
-			String[] tokens = line.split(":");
-			if (tokens.length < 2) continue;
-			String key = clean(tokens[0]);
-			String val = clean(tokens[1]);
-			map.put(key,val);
-		}
-		return map;
-	}
 	
-	String clean(String in)
-	{
-		
-		String trimmed = in.trim();
-		if (trimmed.charAt(0) == '"')
-			return(trimmed.substring(1, trimmed.length()-1));
-		return trimmed;
-	}
+	
+
+
 	/**
 	 * Checks if the specified parameter is computed.
 	 *

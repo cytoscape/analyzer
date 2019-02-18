@@ -5,7 +5,10 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JPanel;
@@ -76,17 +79,76 @@ public class ResultsPanel extends JPanel
 		
 		label.setText(stats);
 	}
-
+	//-----------------------------------------------
 	private String parseJson(String stats) {
+		if (stats == null) return null;
+		if (!stats.startsWith("{")) return stats;
+		Map<String, Object> map = jsonToMap(stats);
+		stats = NetworkStats.formattedOutput(map);
 		return stats;
+		
 	}
 
+	private Map<String, Object> jsonToMap(String json)
+	{
+		String[] lines = json.split("\n");
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		for (String line : lines)
+		{
+			if (line.trim().length() == 0) continue;
+			String[] tokens = line.split(":");
+			if (tokens.length < 2) continue;
+			String key = clean(tokens[0]);
+			Object val = clean(tokens[1]);
+			String s = val.toString();
+			if (isDouble(s) && !isInteger(s))
+				val = Double.parseDouble(val.toString());
+				
+			map.put(key,val);
+		}
+		return map;
+	}
+	
+	private String clean(String in)
+	{
+		
+		String trimmed = in.trim();
+		if (trimmed.charAt(0) == '"')
+			trimmed = trimmed.substring(1);
+		if (trimmed.endsWith(","))
+			trimmed = trimmed.substring(0, trimmed.length()-1);
+		if (trimmed.endsWith("\""))
+			trimmed = trimmed.substring(0, trimmed.length()-1);
+		return trimmed;
+	}
+
+	private boolean isDouble( String input ) {
+	    try {
+	    	Double.parseDouble( input );
+	        return true;
+	    }
+	    catch( NumberFormatException e ) {
+	        return false;
+	    }
+	}
+	private boolean isInteger( String input ) {
+	    try {
+	    	Integer.parseInt( input );
+	        return true;
+	    }
+	    catch( NumberFormatException e ) {
+	        return false;
+	    }
+	}
+
+	//-----------------------------------------------
 	@Override	public Component getComponent() {		return this;	}
 	@Override	public CytoPanelName getCytoPanelName() {		return CytoPanelName.EAST;	}
 	@Override	public Icon getIcon() {		return null;	}
 	@Override	public String getTitle() {		return "Analyzer";	}
 
-	static String INTRO = "These statistics summarize the characteristics of the network.  \nNode specific statistics are found in the node table.";
+	static String INTRO = "Summary statistics of the network.  \nNode specific statistics are found in the node table.";
 	///-----------------------------------------------
 	private JPanel createLabelPanel() {
 		JPanel labelPanel = new JPanel();
@@ -99,9 +161,9 @@ public class ResultsPanel extends JPanel
 		intro.setMaximumSize(new Dimension(300, 40));
 		label = new JTextArea();
 		labelPanel.add(intro);
-//		labelPanel.add(Box.createVerticalStrut(10));
-
+		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		labelPanel.add(label);
+		label.setEditable(false);
 		labelPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
 		return labelPanel;
 	}

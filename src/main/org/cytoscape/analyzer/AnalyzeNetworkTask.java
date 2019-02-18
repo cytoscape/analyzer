@@ -1,5 +1,7 @@
 package org.cytoscape.analyzer;
 
+import java.util.Arrays;
+
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
@@ -26,6 +28,7 @@ package org.cytoscape.analyzer;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.cytoscape.application.swing.CySwingApplication;
@@ -35,11 +38,13 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkCollectionTask;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.TunableValidator;
+import org.cytoscape.work.json.JSONResult;
 
-public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements TunableValidator{
+public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements TunableValidator, ObservableTask {
 
 	@Tunable(description = "Analyze as Directed Graph?")
 	public Boolean directed = false;
@@ -49,6 +54,7 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 	
 	final CyServiceRegistrar registrar;
 	final CySwingApplication desktop;
+	private NetworkAnalyzer analyzer;
 	
 	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app) {
 		super(networks);
@@ -88,13 +94,13 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		if(interpr == null)
 			throw new NullPointerException("NetworkInterpretation is null.");
 		
-		final NetworkAnalyzer analyzer;
 		if (directed)
 			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop);
 		else
 			analyzer = new UndirNetworkAnalyzer(network, nodes, interpr, desktop);
 		
 		analyzer.computeAll();
+		
 	}
 	
 	private final NetworkInterpretation interpretNetwork(NetworkInspection aInsp) {
@@ -107,9 +113,26 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public <R> R getResults(Class<? extends R> type) {
+	    String response = analyzer.getStats().jsonOutput();
+		if (type.equals(String.class)) {
+      return (R)response;
+    } else if (type.equals(JSONResult.class)) {
+			JSONResult res = () -> { return analyzer.getStats().jsonOutput(); };
+			return (R)res;
+		}
+    return null;
+  }
 	@Override
 	public ValidationState getValidationState(Appendable errMsg) {
 		return ValidationState.OK;		// no illegal options with 2 booleans
+	}
+
+	@Override
+	public List<Class<?>> getResultClasses() {
+		return Arrays.asList(String.class, JSONResult.class);
 	}
 
 }

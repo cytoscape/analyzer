@@ -85,7 +85,7 @@ public abstract class NetworkAnalyzer {
 	static String columnName = "statistics";
 	public void doOutput()
 	{
-		String out = stats.formattedOutput(stats.getParameters());
+		String json = stats.jsonOutput();
 		CyTable netTable = network.getDefaultNetworkTable();
 		CyColumn col = netTable.getColumn(columnName);
 		if (col == null)
@@ -93,7 +93,10 @@ public abstract class NetworkAnalyzer {
 			netTable.createColumn(columnName, String.class, true);
 			col = netTable.getColumn(columnName);
 		}
-		netTable.getRow(network.getSUID()).set(columnName, out);
+		netTable.getRow(network.getSUID()).set(columnName, json);
+		
+		
+		String out = stats.formattedOutput(stats.getParameters());
 		CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
 		int nPanels = panel.getCytoPanelComponentCount();

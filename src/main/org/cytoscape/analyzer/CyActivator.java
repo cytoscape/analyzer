@@ -73,11 +73,6 @@ public class CyActivator extends AbstractCyActivator {
 			props.clear();
 			props.put(ID, "analyzeNetworkTaskFactory");	
 			props.put(TITLE, "Analyze Network");
-			props.put(PREFERRED_MENU,"Tools");
-			props.put(MENU_GRAVITY,"9.1");
-			props.put(IN_MENU_BAR, "true");
-			props.put(IN_TOOL_BAR, "false");
-			props.put(ENABLE_FOR, "network");
 			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "analyze");
 			props.put(COMMAND_DESCRIPTION,  "Calculate statistics on the current network");
@@ -87,6 +82,11 @@ public class CyActivator extends AbstractCyActivator {
 
 			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
 			registerService(bc,analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
+			props.put(PREFERRED_MENU,"Tools");
+			props.put(MENU_GRAVITY,"9.1");
+			props.put(IN_MENU_BAR, "true");
+			props.put(IN_TOOL_BAR, "false");
+			props.put(ENABLE_FOR, "network");
 			registerService(bc,analyzeNetworkTaskFactory, TaskFactory.class, props);
 		}
 
