@@ -99,7 +99,6 @@ public class NetworkStats {
 	 * Initializes a new instance of <code>NetworkStats</code>.
 	 */
 	public NetworkStats() {
-		params = new HashMap<String, Object>();
 		network = null;
 	}
 
@@ -109,7 +108,6 @@ public class NetworkStats {
 	 * @param aNetwork Network, on which parameters will be stored.
 	 */
 	public NetworkStats(CyNetwork aNetwork, String aInterpretName) {
-		params = new HashMap<String, Object>();
 		set("networkTitle", aNetwork.getRow(aNetwork).get("name",String.class) + aInterpretName);
 		set("nodeCount", new Integer(aNetwork.getNodeCount()));
 		set("edgeCount", new Integer(aNetwork.getEdgeCount()));
@@ -350,7 +348,8 @@ public class NetworkStats {
 	 * Network parameters in the form of a (ID, value) map.
 	 */
 	public Map<String, Object> getParameters() { return params;	}
-	private Map<String, Object> params;
+	private Map<String, Object> params = new HashMap<String, Object>();
+
 	
 	/**
 	 * Unique network id. Needed for parameter visualization.
