@@ -46,8 +46,13 @@ public class ConnComponentAnalyzer {
 	 * 
 	 * @param aNetwork Network to be analyzed.
 	 */
-	public ConnComponentAnalyzer(CyNetwork aNetwork) {		network = aNetwork;	}
-
+	public ConnComponentAnalyzer(NetworkAnalyzer analz, CyNetwork aNetwork) 
+	{		
+		network = aNetwork;	
+		analyzer = analz;
+	}
+	
+	NetworkAnalyzer analyzer;
 	/**
 	 * Gets all nodes in the given connected component.
 	 * 
@@ -56,7 +61,7 @@ public class ConnComponentAnalyzer {
 	 * @return Set of all nodes in <code>aCompInfo</code>; empty set if this component is not
 	 *         contained in <code>aNetwork</code>.
 	 */
-	public static Set<CyNode> getNodesOf(CyNetwork aNetwork, ConectedComponentInfo aCompInfo) {
+	public static Set<CyNode> getNodesOf(CyNetwork aNetwork, ConnectedComponentInfo aCompInfo) {
 		Set<CyNode> nodes = new HashSet<CyNode>(aCompInfo.getSize());
 		nodes.add(aCompInfo.getNode());
 		LinkedList<CyNode> toTraverse = new LinkedList<CyNode>();
@@ -81,18 +86,18 @@ public class ConnComponentAnalyzer {
 	 * @return Set of all components in the analyzed network ({@link #getNetwork()}); empty set if
 	 *         the analyzed network is empty.
 	 */
-	public Set<ConectedComponentInfo> findComponents() {
+	public Set<ConnectedComponentInfo> findComponents() {
 		int untravCount = network.getNodeCount();
 
 		Set<CyNode> traversed = new HashSet<CyNode>(untravCount);
-		Set<ConectedComponentInfo> components = new HashSet<ConectedComponentInfo>();
+		Set<ConnectedComponentInfo> components = new HashSet<ConnectedComponentInfo>();
 
 		for ( CyNode node : network.getNodeList()) {
 			if (!traversed.contains(node)) {
 				// Unmarked node reached - create new conn. component
 				final int ccSize = traverseReachable(node, traversed);
 				untravCount -= ccSize;
-				components.add(new ConectedComponentInfo(ccSize, node));
+				components.add(new ConnectedComponentInfo(analyzer, ccSize, node, false));
 			}
 		}
 		return components;
@@ -110,13 +115,12 @@ public class ConnComponentAnalyzer {
 	 * @return Connected component C in the analyzed network, such that no other connected component
 	 *         in the network contains more nodes than C.
 	 */
-	public ConectedComponentInfo findLargestComponent() {
-		ConectedComponentInfo largest = new ConectedComponentInfo(0, null);
-		final Set<ConectedComponentInfo> comps = findComponents();
-		for (ConectedComponentInfo current : comps) {
+	public ConnectedComponentInfo findLargestComponent() {
+		ConnectedComponentInfo largest = new ConnectedComponentInfo(analyzer, 0, null, false);
+		final Set<ConnectedComponentInfo> comps = findComponents();
+		for (ConnectedComponentInfo current : comps) 
 			if (current.getSize() > largest.getSize()) 
 				largest = current;
-		}
 		return largest;
 	}
 
@@ -130,9 +134,9 @@ public class ConnComponentAnalyzer {
 	 * @return Set of all nodes in <code>aCompInfo</code>; empty set if this component is not
 	 *         contained in the analyzed network ({@link #getNetwork()}).
 	 * 
-	 * @see #getNodesOf(CyNetwork, ConectedComponentInfo)
+	 * @see #getNodesOf(CyNetwork, ConnectedComponentInfo)
 	 */
-	public Set<CyNode> getNodesOf(ConectedComponentInfo aCompInfo) {		return getNodesOf(network, aCompInfo);	}
+	public Set<CyNode> getNodesOf(ConnectedComponentInfo aCompInfo) {		return getNodesOf(network, aCompInfo);	}
 
 	/**
 	 * Traverses all nodes that are reachable from the given node.

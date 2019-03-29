@@ -55,11 +55,13 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 	final CyServiceRegistrar registrar;
 	final CySwingApplication desktop;
 	private NetworkAnalyzer analyzer;
+	boolean degreeOnly;
 	
-	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app) {
+	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app, boolean degree) {
 		super(networks);
 		desktop = app;
 		registrar = reg;
+		degreeOnly = degree;
 	}
 
 	@Override
@@ -95,9 +97,9 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 			throw new NullPointerException("NetworkInterpretation is null.");
 		
 		if (directed)
-			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop);
+			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop, degreeOnly);
 		else
-			analyzer = new UndirNetworkAnalyzer(network, nodes, interpr, desktop);
+			analyzer = new UndirNetworkAnalyzer(network, interpr, desktop, degreeOnly);
 		
 		analyzer.computeAll();
 		

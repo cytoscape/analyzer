@@ -146,7 +146,7 @@ public abstract class NetworkAnalyzer {
 	 *         nodes only.
 	 */
 	public boolean isGlobal() {
-		return nodeSet == null;
+		return true;  // nodeSet == null;
 	}
 
 	/**
@@ -164,9 +164,9 @@ public abstract class NetworkAnalyzer {
 	 * @see #interpr
 	 * @see #stats
 	 */
-	protected NetworkAnalyzer(CyNetwork aNetwork, Set<CyNode> aNodeSet, NetworkInterpretation aInterpr, CySwingApplication app) {
+	protected NetworkAnalyzer(CyNetwork aNetwork, NetworkInterpretation aInterpr, CySwingApplication app, boolean degree) {
 		network = aNetwork;
-		nodeSet = aNodeSet;
+//		nodeSet = aNodeSet;
 		interpr = aInterpr;
 		stats = new NetworkStats(aNetwork, aInterpr.getInterpretSuffix());
 		progress = 0;
@@ -286,29 +286,6 @@ public abstract class NetworkAnalyzer {
 		}
 		return total;
 	}
-
-	/**
-	 * Gets the averages of the accumulated values and stores them in a set.
-	 * <p>
-	 * This method is used for computing the average neighborhood connectivity. In this case, the keys of the
-	 * map are node connectivities and the values - the accumulated connectivities of the neighbors of a node
-	 * with k links.
-	 * </p>
-	 * 
-	 * @param pAccumulatedValues
-	 *            Mapping of integers and accumulated values.
-	 * @return Set of points that stores the averages of the accumulated values in the mapping. The
-	 *         <code>x</code> coordinate of each point is a key in the mapping and the <code>y</code>
-	 *         coordinate - the average of the accumulated numbers in the corresponding value of the map.
-	 */
-	protected static Set<Point2D.Double> getAverages(Map<Integer, SumCountPair> pAccumulatedValues) {
-		Set<Point2D.Double> averages = new HashSet<Point2D.Double>(pAccumulatedValues.size());
-		for (Integer x : pAccumulatedValues.keySet()) {
-			final double y = pAccumulatedValues.get(x).getAverage();
-			averages.add(new Point2D.Double(x.doubleValue(), y));
-		}
-		return averages;
-	}
 	
 	/**
 	 * the frame is used to access the results panel
@@ -322,7 +299,7 @@ public abstract class NetworkAnalyzer {
 	/**
 	 * Subset of nodes to be analyzed.
 	 */
-	protected Set<CyNode> nodeSet;
+//	protected Set<CyNode> nodeSet;
 
 	/**
 	 * Interpretation of edges in {@link #network}.
@@ -355,6 +332,14 @@ public abstract class NetworkAnalyzer {
 	 * </p>
 	 */
 	protected boolean cancelled;
+
+	/**
+	 * Flag indicating if only the minimal calculations should be run
+	 * <p>
+	 * This flag supports a subset of the functionality, especially when the size of the network is larger.
+	 * </p>
+	 */
+	protected boolean degreeOnly;
 
 	/**
 	 * Set of all edges that are removed from {@link #network} before the analysis. These edges are added back

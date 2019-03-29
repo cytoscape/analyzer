@@ -82,6 +82,20 @@ public class CyActivator extends AbstractCyActivator {
 
 			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
 			registerService(bc,analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
+
+			// adding a second task
+			props.put(ID, "analyzeDegreeTaskFactory");	
+			props.put(TITLE, "Compute Degree");
+			props.put(COMMAND_NAMESPACE, "analyzer");
+			props.put(COMMAND, "degree");
+			props.put(COMMAND_DESCRIPTION,  "Calculate the degree of nodes in statistics on the current network");
+			props.put(COMMAND_LONG_DESCRIPTION, "Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
+			props.put(COMMAND_EXAMPLE_JSON, "{   \"networkTitle\": \"galFiltered.sif (undirected)\",   \"nodeCount\": \"330\",  \"avNeighbors\": \"2.167\"}");
+			props.put(COMMAND_SUPPORTS_JSON, "true");
+
+			analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
+			registerService(bc,analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
+	
 			props.put(PREFERRED_MENU,"Tools");
 			props.put(MENU_GRAVITY,"9.1");
 			props.put(IN_MENU_BAR, "true");
@@ -99,7 +113,7 @@ public class CyActivator extends AbstractCyActivator {
 			CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 			panel.setState(CytoPanelState.DOCK);
 		}
-		{	String version = "4.0.1a";			// TODO keep in synch with POM
+		{	String version = "4.0.1c";			// TODO keep in synch with POM
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
 			props = new Properties();

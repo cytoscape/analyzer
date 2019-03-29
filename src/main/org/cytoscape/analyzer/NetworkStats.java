@@ -96,6 +96,17 @@ public class NetworkStats {
 	};
 
 	/**
+	 * Network parameters in the form of a (ID, value) map.
+	 */
+	public Map<String, Object> getParameters() { return params;	}
+	private Map<String, Object> params;
+	
+	/**
+	 * Unique network id. Needed for parameter visualization.
+	 */
+	private CyNetwork network; 
+
+	/**
 	 * Initializes a new instance of <code>NetworkStats</code>.
 	 */
 	public NetworkStats() {
@@ -184,9 +195,7 @@ public class NetworkStats {
 	 * @return <code>true</code> if the parameter with the specified ID is stored in this instance;
 	 * <code>false</code> otherwise.
 	 */
-	public boolean contains(String aParam) {
-		return params.containsKey(aParam);
-	}
+	public boolean contains(String aParam) {	return params.containsKey(aParam);	}
 
 	/**
 	 * Gets the value of the specified parameter.
@@ -194,9 +203,7 @@ public class NetworkStats {
 	 * @param aParam ID of the parameter to get.
 	 * @return Instance of parameter's value; <code>null</code> if such a parameter is not stored.
 	 */
-	public Object get(String aParam) {
-		return params.get(aParam);
-	}
+	public Object get(String aParam) {		return params.get(aParam);	}
 
 	/**
 	 * Gets the value of the specified complex parameter.
@@ -346,14 +353,4 @@ public class NetworkStats {
 		return computed;
 	}
 
-	/**
-	 * Network parameters in the form of a (ID, value) map.
-	 */
-	public Map<String, Object> getParameters() { return params;	}
-	private Map<String, Object> params;
-	
-	/**
-	 * Unique network id. Needed for parameter visualization.
-	 */
-	private CyNetwork network; 
 }

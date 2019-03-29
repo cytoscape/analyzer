@@ -40,15 +40,22 @@ import org.cytoscape.work.TaskIterator;
 public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFactory implements TaskFactory {
 	private final CySwingApplication app; 
 	private final CyServiceRegistrar reg;
+	private boolean degreeOnly = false;
 	
 	public AnalyzeNetworkTaskFactory(CyServiceRegistrar registrar, CySwingApplication desktop)
 	{
 		reg = registrar;
 		app = desktop;
 	}
+	public AnalyzeNetworkTaskFactory(CyServiceRegistrar registrar, CySwingApplication desktop, boolean degree)
+	{
+		reg = registrar;
+		app = desktop;
+		degreeOnly = degree;
+	}
 	@Override
 	public TaskIterator createTaskIterator(final Collection<CyNetwork> networks) {
-		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app));
+		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app, degreeOnly));
 	}
 	@Override
 	public TaskIterator createTaskIterator() {
@@ -56,7 +63,7 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 		CyNetwork current = appMgr.getCurrentNetwork();
 		 List<CyNetwork> networks = new ArrayList<CyNetwork>();
 		 networks.add(current);
-		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app));
+		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app, degreeOnly));
 
 	}
 	@Override

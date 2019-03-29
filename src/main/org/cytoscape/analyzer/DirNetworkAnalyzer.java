@@ -1,5 +1,7 @@
 package org.cytoscape.analyzer;
 
+import java.awt.geom.Point2D;
+
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
@@ -26,7 +28,6 @@ package org.cytoscape.analyzer;
  * #L%
  */
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,11 +65,9 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 	 * @param aInterpr
 	 *            Interpretation of the network edges.
 	 */
-	public DirNetworkAnalyzer(CyNetwork aNetwork, Set<CyNode> aNodeSet, NetworkInterpretation aInterpr, CySwingApplication app) 
+	public DirNetworkAnalyzer(CyNetwork aNetwork, Set<CyNode> aNodeSet, NetworkInterpretation aInterpr, CySwingApplication app, boolean degree) 
 	{
-		super(aNetwork, aNodeSet, aInterpr, app);
-		if (nodeSet != null)
-			stats.set("nodeCount", nodeSet.size());
+		super(aNetwork, aInterpr, app, degree);
 		nodeCount = stats.getInt("nodeCount");
 		sPathLengths = new long[nodeCount];
 		useNodeAttributes = true;  //SettingsSerializer.getPluginSettings().getUseNodeAttributes();
@@ -111,19 +110,17 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 		radius = Integer.MAX_VALUE;
 
 		// Compute number of connected components
-		final ConnComponentAnalyzer cca = new ConnComponentAnalyzer(network);
-		Set<ConectedComponentInfo> components = cca.findComponents();
+		final ConnComponentAnalyzer cca = new ConnComponentAnalyzer(this, network);
+		Set<ConnectedComponentInfo> components = cca.findComponents();
 		final int connectedComponentsCount = components.size();
 
 		// Compute node and edge betweenness
-		for (ConectedComponentInfo aCompInfo : components) {
+		for (ConnectedComponentInfo aCompInfo : components) {
 
 			// Get nodes of connected component
 			final Set<CyNode> connNodes = cca.getNodesOf(aCompInfo);
 			final Set<CyEdge> connEdges = new HashSet<CyEdge>();
-			if (nodeSet != null)
-				connNodes.retainAll(nodeSet);
-			
+
 			// Convert the graph into an array representation to accelerate traversal
 			final int numNodes = connNodes.size();
 			final int[] edgeOffsets = new int[numNodes + 1];
@@ -301,13 +298,13 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 		
 						if (useNodeAttributes) 
 						{
-							nodeRow.set(Msgs.getAttr("cco"), 0.0);
-							nodeRow.set(Msgs.getAttr("din"), inCyEdges.size());
-							nodeRow.set(Msgs.getAttr("dou"), outCyEdges.size());
-							nodeRow.set(Msgs.getAttr("dal"), inCyEdges.size() + outCyEdges.size());
-							nodeRow.set(Msgs.getAttr("isn"), (neighborCount == 0));
-							nodeRow.set(Msgs.getAttr("slo"), selfloops);
-							nodeRow.set(Msgs.getAttr("pmn"), partnerOfMultiEdgeNodePairs);
+							nodeRow.set("cco", 0.0);
+							nodeRow.set("din", inCyEdges.size());
+							nodeRow.set("dou", outCyEdges.size());
+							nodeRow.set("dal", inCyEdges.size() + outCyEdges.size());
+							nodeRow.set("isn", (neighborCount == 0));
+							nodeRow.set("slo", selfloops);
+							nodeRow.set("pmn", partnerOfMultiEdgeNodePairs);
 						}
 		
 						if (neighborCount > 1) 
@@ -319,44 +316,35 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 								accumulate(CCps, neighborCount, nodeCCp);
 							}
 							if (useNodeAttributes)
-								nodeRow.set(Msgs.getAttr("cco"), Utils.roundTo(nodeCCp, roundingDigits));
+								nodeRow.set("cco", Utils.roundTo(nodeCCp, roundingDigits));
 						} 
 						else if (useNodeAttributes) 
-							nodeRow.set(Msgs.getAttr("cco"), 0.0);
+							nodeRow.set("cco", 0.0);
 		
 						// Neighborhood connectivity calculation
 						// -------------------------------------
 						final double nco = averageNeighbors(neighborsArray, edgeOffsets);
 						if (neighborCount > 0) 
 						{
-							synchronized (parent.ioNCps)
-							{
-								accumulate(parent.ioNCps, neighborCount, nco);
-							}
+							accumulate(parent.ioNCps, neighborCount, nco);
 						}
 						if (outNeighborCount > 0) 
 						{
 							double outNC = averageNeighbors(outNeighborsArray, outEdgeOffsets);
-							synchronized (parent.outNCps)
-							{
-								parent.outNeighbors += outNeighborCount;
-								accumulate(parent.outNCps, outNeighborCount, outNC);
-							}
+							parent.outNeighbors += outNeighborCount;
+							accumulate(parent.outNCps, outNeighborCount, outNC);
 						}
 						if (inNeighborCount > 0) 
 						{
 							double inNC = averageNeighbors(inNeighborsArray, inEdgeOffsets);
-							synchronized (parent.inNCps)
-							{
-								accumulate(parent.inNCps, inNeighborCount, inNC);
-							}
+							accumulate(parent.inNCps, inNeighborCount, inNC);
 						}
 		
 						if (useNodeAttributes) {
-							nodeRow.set(Msgs.getAttr("nco"), nco);
+							nodeRow.set("nco", nco);
 						}
 		
-						if (nodeSet == null) {
+						{
 							// Compute shortest path lengths
 							PathLengthData pathLengths = computeSP(nodeID, numNodes, outEdges, outEdgeOffsets, localSPathLengths);
 							
@@ -378,9 +366,9 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 							}
 		
 							if (useNodeAttributes) {
-								nodeRow.set(Msgs.getAttr("spl"), eccentricity);
-								nodeRow.set(Msgs.getAttr("apl"), Utils.roundTo(apl, roundingDigits));
-								nodeRow.set(Msgs.getAttr("clc"), Utils.roundTo(closeness, roundingDigits));
+								nodeRow.set("spl", eccentricity);
+								nodeRow.set("apl", Utils.roundTo(apl, roundingDigits));
+								nodeRow.set("clc", Utils.roundTo(closeness, roundingDigits));
 							}
 		
 							// CyNode and edge betweenness calculation
@@ -427,12 +415,11 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 			}
 			
 			// Normalize and save betweenness and stress
-			if (nodeSet == null && computeNB) 
 			{
 				for (final CyNode n : connNodes) 
 				{
 					int nodeID = node2Int.get(n);
-					
+					CyRow row = network.getRow(n);
 					final double nNormFactor = computeNormFactor(numNodes);
 					double nb = nodeBetweennessLean[nodeID] * nNormFactor;
 					if (Double.isNaN(nb))
@@ -444,8 +431,8 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 					stressDist.addObservation(nodeStress);
 					
 					if (useNodeAttributes) {
-						network.getRow(n).set(Msgs.getAttr("nbt"), Utils.roundTo(nb, roundingDigits));
-						network.getRow(n).set(Msgs.getAttr("stress"), nodeStress);
+						row.set("nbt", nb);
+						row.set("stress", nodeStress);
 					}
 				}
 
@@ -464,12 +451,12 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 						if (Double.isNaN(eb)) {
 							eb = 0.0;
 						}
-						network.getRow(edge).set(Msgs.getAttr("ebt"), Utils.roundTo(eb, roundingDigits));
+						network.getRow(edge).set("ebt", Utils.roundTo(eb, roundingDigits));
 					}
 				}
 			}
 		}
-
+		// Summarize
 		// Save in and out degree distributions in the statistics instance
 		stats.set("inDegreeDist", inDegreeDist.createHistogram());
 		stats.set("outDegreeDist", outDegreeDist.createHistogram());
@@ -479,12 +466,11 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 			Point2D.Double[] averages = new Point2D.Double[CCps.size()];
 			double cc = accumulateCCs(CCps, averages) / nodeCount;
 			stats.set("cc", cc);
-			if (averages.length > 1) {
+			if (averages.length > 1) 
 				stats.set("cksDist", new Points2D(averages));
-			}
 		}
 
-		if (nodeSet == null) {
+		{
 			long connPairs = 0; // total number of connected pairs of nodes
 			long totalPathLength = 0;
 			for (int i = 1; i <= diameter; ++i) {
@@ -514,36 +500,34 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 		stats.set("mnp", multiEdgePartners / 2);
 
 		// Save the neighborhood connectivities for incoming edges, outgoing edges and both
-		if (inNCps.size() > 1) {
+		if (inNCps.size() > 1) 
 			stats.set("inNeighborConn", new Points2D(getAverages(inNCps)));
-		}
-		if (outNCps.size() > 1) {
+		if (outNCps.size() > 1) 
 			stats.set("outNeighborConn", new Points2D(getAverages(outNCps)));
-		}
-		if (ioNCps.size() > 1) {
+		if (ioNCps.size() > 1) 
 			stats.set("allNeighborConn", new Points2D(getAverages(ioNCps)));
-		}
 
 		// Save closeness centrality in the statistics instance
-		if (closenessCent.size() > 1) {
+		if (closenessCent.size() > 1) 
 			stats.set("closenessCent", new Points2D(closenessCent));
-		}
 
 		// Save node betweenness
-		if (nodeBetweennessArray.size() > 0) {
+		if (nodeBetweennessArray.size() > 0)
 			stats.set("nodeBetween", new Points2D(nodeBetweennessArray));
-		}
 
 		// Save stress distribution in the statistics instance
-		if (nodeSet == null && computeNB) {
-			stats.set("stressDist", stressDist.createPoints2D());
-		}
+		stats.set("stressDist", stressDist.createPoints2D());
 
 		analysisFinished();
 		time = System.currentTimeMillis() - time;
 		stats.set("time", time / 1000.0);
 		progress = nodeCount;
 		doOutput();
+	}
+
+	private List<java.awt.geom.Point2D.Double> getAverages(HashMap<Integer, SumCountPair> inNCps2) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/**
