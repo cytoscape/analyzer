@@ -1,4 +1,4 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
 
 import java.awt.Component;
@@ -10,13 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
+import org.cytoscape.analyzer.util.NetworkStats;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkEvent;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
@@ -40,6 +43,9 @@ public class ResultsPanel extends JPanel
 	final Font iconFont;
 	private JTextArea intro;
 	private JTextArea label;
+	private JButton degreeHisto;
+	private JButton betweenScatter;
+	private JButton closenessClusterScatter;
 
 	private CyNetwork network;
 //	private String enrichmentType = "entireNetwork";
@@ -54,6 +60,7 @@ public class ResultsPanel extends JPanel
 		iconFont = iconManager.getIconFont(17.0f);
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		add(createLabelPanel());
+		add(createGraphButtons());
 		revalidate();
 		repaint();
 	}
@@ -65,6 +72,7 @@ public class ResultsPanel extends JPanel
 	public void handleEvent(SetCurrentNetworkEvent scne) {
 		network = scne.getNetwork();
 		String stats = "No Network Selected";
+		enableButtons(network != null);
 		if (network != null) 
 		{
 			if (network.getNodeCount() < 1 || network.getEdgeCount() < 1)
@@ -80,6 +88,13 @@ public class ResultsPanel extends JPanel
 		
 		label.setText(stats);
 	}
+	private void enableButtons(boolean b) {
+		degreeHisto.setEnabled(b);;
+		betweenScatter.setEnabled(b);
+		closenessClusterScatter.setEnabled(b);
+		
+	}
+
 	//-----------------------------------------------
 	private String parseJson(String stats) {
 		if (stats == null) return null;
@@ -126,21 +141,15 @@ public class ResultsPanel extends JPanel
 
 	private boolean isDouble( String input ) {
 	    try {
-	    	Double.parseDouble( input );
-	        return true;
+	    	Double.parseDouble( input );	        return true;
 	    }
-	    catch( NumberFormatException e ) {
-	        return false;
-	    }
+	    catch( NumberFormatException e ) {	        return false;	    }
 	}
 	private boolean isInteger( String input ) {
 	    try {
-	    	Integer.parseInt( input );
-	        return true;
+	    	Integer.parseInt( input );	        return true;
 	    }
-	    catch( NumberFormatException e ) {
-	        return false;
-	    }
+	    catch( NumberFormatException e ) {      return false;    }
 	}
 
 	//-----------------------------------------------
@@ -159,6 +168,7 @@ public class ResultsPanel extends JPanel
 		intro.setOpaque(false);
 		intro.setVisible(false);
 		intro.setText(INTRO);
+		intro.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		intro.setMaximumSize(new Dimension(300, 40));
 		label = new JTextArea();
 		labelPanel.add(intro);
@@ -166,6 +176,41 @@ public class ResultsPanel extends JPanel
 		labelPanel.add(label);
 		label.setEditable(false);
 		labelPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+		return labelPanel;
+	}
+	private JPanel createGraphButtons() {
+		JPanel labelPanel = new JPanel();
+		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.PAGE_AXIS));
+		
+		degreeHisto = new JButton("Show Node Degree Distribution");
+		betweenScatter = new JButton("Show Betweenness by Degree");
+		closenessClusterScatter = new JButton("Show Closeness Graph");
+		enableButtons(false);
+		
+//		degreeHisto.addActionListener(new MouseE));
+		degreeHisto.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) {     manager.makeDegreeHisto();  } } );		
+		betweenScatter.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) {     manager.makeBetweenScatter();  } } );		
+		closenessClusterScatter.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) {     manager.makeClosenessClusterScatter();  } } );		
+		JPanel line1 = new JPanel(); 
+		line1.setLayout(new BoxLayout(line1, BoxLayout.LINE_AXIS));
+		line1.add(degreeHisto);
+		line1.add(Box.createHorizontalGlue());
+		labelPanel.add(line1); 
+		
+		JPanel line2 = new JPanel(); 
+		line2.setLayout(new BoxLayout(line2, BoxLayout.LINE_AXIS));
+		line2.add(betweenScatter);
+		line2.add(Box.createHorizontalGlue());
+		labelPanel.add(line2);
+		
+		JPanel line3 = new JPanel(); 
+		line3.setLayout(new BoxLayout(line3, BoxLayout.LINE_AXIS));
+		line3.add(closenessClusterScatter);
+		line3.add(Box.createHorizontalGlue());
+		labelPanel.add(line3);
 		return labelPanel;
 	}
 

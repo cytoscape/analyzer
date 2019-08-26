@@ -1,6 +1,4 @@
-package java.org.cytoscape.analyzer.util;
-
-import java.org.cytoscape.analyzer.NetworkInspection;
+package org.cytoscape.analyzer.util;
 
 /*
  * #%L

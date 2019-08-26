@@ -1,8 +1,5 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer.util;
 
-
-import java.org.cytoscape.analyzer.util.ComplexParam;
-import java.org.cytoscape.analyzer.util.Msgs;
 
 /*
  * #%L

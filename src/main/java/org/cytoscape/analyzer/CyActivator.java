@@ -1,4 +1,4 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
 
 import static org.cytoscape.work.ServiceProperties.COMMAND;
@@ -42,6 +42,8 @@ import static org.cytoscape.work.ServiceProperties.TITLE;
 
 import java.util.Properties;
 
+import org.cytoscape.analyzer.tasks.AnalyzeNetworkTaskFactory;
+import org.cytoscape.analyzer.tasks.VersionTaskFactory;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
@@ -65,7 +67,7 @@ public class CyActivator extends AbstractCyActivator {
 	public void start(BundleContext bc) {
         final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
         final CySwingApplication desktop = getService(bc, CySwingApplication.class);
-		final AnalyzerManager manager = new AnalyzerManager(registrar);		
+		final AnalyzerManager manager = new AnalyzerManager(registrar, desktop);		
 
 		Properties props = new Properties();
 		
@@ -81,7 +83,7 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(COMMAND_SUPPORTS_JSON, "true");
 			props.put(ENABLE_FOR, "network");
 
-			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
+			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager );
 			registerService(bc,analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
 			props.put(PREFERRED_MENU,"Tools");
 			props.put(MENU_GRAVITY,"9.1");
@@ -101,7 +103,7 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(COMMAND_SUPPORTS_JSON, "true");
 			props.put(ENABLE_FOR, "network");
 
-			AnalyzeNetworkTaskFactory degreeOnlyNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop );
+			AnalyzeNetworkTaskFactory degreeOnlyNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager );
 			registerService(bc,degreeOnlyNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
 			props.put(PREFERRED_MENU,"Tools");
 			props.put(MENU_GRAVITY,"9.15");
@@ -110,15 +112,16 @@ public class CyActivator extends AbstractCyActivator {
 			registerService(bc,degreeOnlyNetworkTaskFactory, TaskFactory.class, props);
 		}
 
-		{	// create and register the results panel, 
-			// and listen for network change events, 
-			// so we always show the current network stats
-			ResultsPanel resultsPanel = new ResultsPanel(manager);
-			registerService(bc, resultsPanel, CytoPanelComponent.class);
-			registerService(bc, resultsPanel, SetCurrentNetworkListener.class);
-			CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
-			panel.setState(CytoPanelState.DOCK);
-		}
+//		{	// create and register the results panel, 
+//			// and listen for network change events, 
+//			// so we always show the current network stats
+//			ResultsPanel resultsPanel = new ResultsPanel(manager);
+//			registerService(bc, resultsPanel, CytoPanelComponent.class);
+//			registerService(bc, resultsPanel, SetCurrentNetworkListener.class);
+//			CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
+//			panel.setState(CytoPanelState.DOCK);
+//		}
+
 		{	String version = "4.0.2";			// TODO keep in synch with POM
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);

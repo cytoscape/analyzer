@@ -1,7 +1,9 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
 
-import java.org.cytoscape.analyzer.util.PathLengthData;
+import org.cytoscape.analyzer.util.ConnectedComponentInfo;
+import org.cytoscape.analyzer.util.NetworkInterpretation;
+import org.cytoscape.analyzer.util.PathLengthData;
 import java.util.List;
 import java.util.Set;
 
@@ -29,9 +31,9 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 	 * @param aInterpr
 	 *            Interpretation of the network edges.
 	 */
-	public UndirNetworkAnalyzer(CyNetwork aNetwork, NetworkInterpretation aInterpr, CySwingApplication app, boolean degree) 
+	public UndirNetworkAnalyzer(CyNetwork aNetwork, NetworkInterpretation aInterpr, CySwingApplication app, AnalyzerManager mgr) 
 	{
-		super(aNetwork, aInterpr, app, degree);
+		super(aNetwork, aInterpr, app, mgr);
 //		if (nodeSet != null) 
 //			stats.set("nodeCount", nodeSet.size());
 		AttributeSetup.createUndirectedNodeAttributes(aNetwork.getTable(CyNode.class, CyNetwork.LOCAL_ATTRS));

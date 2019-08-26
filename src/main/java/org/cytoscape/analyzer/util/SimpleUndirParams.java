@@ -1,6 +1,4 @@
-package java.org.cytoscape.analyzer;
-
-import java.org.cytoscape.analyzer.util.SumCountPair;
+package org.cytoscape.analyzer.util;
 
 /*
  * #%L

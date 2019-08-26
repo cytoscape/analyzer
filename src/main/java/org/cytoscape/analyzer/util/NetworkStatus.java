@@ -1,6 +1,4 @@
-package java.org.cytoscape.analyzer;
-
-import java.org.cytoscape.analyzer.util.Msgs;
+package org.cytoscape.analyzer.util;
 
 /**
  * Enumeration on edge construction principles of networks, as well as options (in human readable

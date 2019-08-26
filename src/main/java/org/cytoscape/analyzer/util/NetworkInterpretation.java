@@ -1,6 +1,4 @@
-package java.org.cytoscape.analyzer;
-
-import java.org.cytoscape.analyzer.util.Msgs;
+package org.cytoscape.analyzer.util;
 
 /**
  * Storage class for information on how to interpret a network.

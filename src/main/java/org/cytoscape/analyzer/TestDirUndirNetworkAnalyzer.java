@@ -1,4 +1,4 @@
-//package java.org.cytoscape.analyzer;
+//package org.cytoscape.analyzer;
 //
 //import org.junit.Test;
 //import static org.junit.Assert.fail;

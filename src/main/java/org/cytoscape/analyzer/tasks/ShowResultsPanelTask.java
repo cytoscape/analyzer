@@ -1,8 +1,11 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer.tasks;
 
 
 import java.util.Properties;
 
+import org.cytoscape.analyzer.AnalyzerManager;
+import org.cytoscape.analyzer.ResultsPanel;
+import org.cytoscape.analyzer.util.NetworkStats;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;

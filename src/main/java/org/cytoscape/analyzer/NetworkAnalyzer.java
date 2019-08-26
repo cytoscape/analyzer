@@ -1,4 +1,4 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
 
 import java.awt.Component;
@@ -30,7 +30,10 @@ import java.awt.Component;
  */
 
 import java.awt.geom.Point2D;
-import java.org.cytoscape.analyzer.util.SumCountPair;
+
+import org.cytoscape.analyzer.util.NetworkInterpretation;
+import org.cytoscape.analyzer.util.NetworkStats;
+import org.cytoscape.analyzer.util.SumCountPair;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -166,13 +169,16 @@ public abstract class NetworkAnalyzer {
 	 * @see #interpr
 	 * @see #stats
 	 */
-	protected NetworkAnalyzer(CyNetwork aNetwork, NetworkInterpretation aInterpr, CySwingApplication app, boolean degree) {
+	
+	
+	protected NetworkAnalyzer(CyNetwork aNetwork, NetworkInterpretation aInterpr, CySwingApplication app, AnalyzerManager mgr) {
 		network = aNetwork;
 //		nodeSet = aNodeSet;
 		interpr = aInterpr;
 		stats = new NetworkStats(aNetwork, aInterpr.getInterpretSuffix());
 		progress = 0;
 		desktop = app;
+		manager = mgr;
 	}
 
 	/**
@@ -182,6 +188,7 @@ public abstract class NetworkAnalyzer {
 	 * </p>
 	 */
 	protected void analysisStarting() {
+		manager.registerResultsPanel();
 		if (interpr.isIgnoreUSL()) {
 			removedEdges = new HashSet<CyEdge>();
 			for ( CyEdge edge : network.getEdgeList() ) {
@@ -231,7 +238,7 @@ public abstract class NetworkAnalyzer {
 	 * @param aValue
 	 *            Value to be added.
 	 */
-	protected void accumulate(Map<Integer, SumCountPair> aMapping, int aKey, double aValue) {
+	public void accumulate(Map<Integer, SumCountPair> aMapping, int aKey, double aValue) {
 		accumulate(aMapping, new Integer(aKey), aValue);
 	}
 
@@ -277,7 +284,7 @@ public abstract class NetworkAnalyzer {
 	 *             If <code>aCCps</code> is <code>null</code>; or if <code>aCCps</code> is non-empty and
 	 *             <code>aAverages</code> is <code>null</code>.
 	 */
-	protected double accumulateCCs(Map<Integer, SumCountPair> aCCps, Point2D.Double[] aAverages) {
+	public double accumulateCCs(Map<Integer, SumCountPair> aCCps, Point2D.Double[] aAverages) {
 		double total = 0;
 		Set<Integer> neighborCounts = aCCps.keySet();
 		int i = 0;
@@ -290,13 +297,17 @@ public abstract class NetworkAnalyzer {
 	}
 	
 	/**
+	 * the local object that remembers locations for our app
+	 */
+	AnalyzerManager  manager;
+	/**
 	 * the frame is used to access the results panel
 	 */
 	protected CySwingApplication desktop;
 	/**
 	 * Target network for analysis.
 	 */
-	protected CyNetwork network;
+	public CyNetwork network;
 
 	/**
 	 * Subset of nodes to be analyzed.
@@ -323,7 +334,7 @@ public abstract class NetworkAnalyzer {
 	 * 
 	 * @see #getMaxProgress()
 	 */
-	protected int progress;
+	public int progress;
 
 	/**
 	 * Flag indicating if the process of analysis was cancelled by the user.
@@ -333,7 +344,7 @@ public abstract class NetworkAnalyzer {
 	 * value of this flag should be checked at regular intervals.
 	 * </p>
 	 */
-	protected boolean cancelled;
+	public boolean cancelled;
 
 	/**
 	 * Flag indicating if only the minimal calculations should be run

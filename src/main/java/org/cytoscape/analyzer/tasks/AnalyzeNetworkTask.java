@@ -1,4 +1,4 @@
-package org.cytoscape.analyzer;
+package org.cytoscape.analyzer.tasks;
 
 import java.util.Arrays;
 
@@ -31,6 +31,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.cytoscape.analyzer.AnalyzerManager;
+import org.cytoscape.analyzer.DirNetworkAnalyzer32;
+import org.cytoscape.analyzer.NetworkAnalyzer;
+import org.cytoscape.analyzer.UndirNetworkAnalyzer;
+import org.cytoscape.analyzer.util.CyNetworkUtils;
+import org.cytoscape.analyzer.util.NetworkInspection;
+import org.cytoscape.analyzer.util.NetworkInterpretation;
+import org.cytoscape.analyzer.util.NetworkStatus;
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
@@ -38,6 +47,10 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkCollectionTask;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.presentation.property.ArrowShapeVisualProperty;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.values.ArrowShape;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
@@ -49,19 +62,33 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 	@Tunable(description = "Analyze as Directed Graph?")
 	public Boolean directed = false;
 	
-	@Tunable(description = "Analyze only selected nodes?")
+//	@Tunable(description = "Analyze only selected nodes?")
 	public Boolean selectedOnly = false;
 	
 	final CyServiceRegistrar registrar;
 	final CySwingApplication desktop;
 	private NetworkAnalyzer analyzer;
-	boolean degreeOnly;
+	final AnalyzerManager manager;
 	
-	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app, boolean degree) {
+	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app, AnalyzerManager mgr) {
 		super(networks);
 		desktop = app;
 		registrar = reg;
-		degreeOnly = degree;
+		manager = mgr;	
+		directed = anyDirected(networks);   // always true:   AnalyzeNetworkTaskFactory.isDirected(networks);
+	}
+
+	private Boolean anyDirected(Collection<CyNetwork> networks) {
+		
+		for (CyNetwork net : networks)
+			if (isDireceted(net)) return true;
+		return false;
+	}
+
+	private boolean isDireceted(CyNetwork net) {
+		CyNetworkView view = registrar.getService(CyApplicationManager.class).getCurrentNetworkView();
+		ArrowShape arrow = (ArrowShape) view.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+		return (arrow != null && arrow != ArrowShapeVisualProperty.NONE);
 	}
 
 	@Override
@@ -97,9 +124,9 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 			throw new NullPointerException("NetworkInterpretation is null.");
 		
 		if (directed)
-			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop, degreeOnly);
+			analyzer = new DirNetworkAnalyzer32(network, nodes, interpr, desktop, manager);
 		else
-			analyzer = new UndirNetworkAnalyzer(network, interpr, desktop, degreeOnly);
+			analyzer = new UndirNetworkAnalyzer(network, interpr, desktop, manager);
 		
 		analyzer.computeAll();
 		

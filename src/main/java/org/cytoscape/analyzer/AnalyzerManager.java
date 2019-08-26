@@ -1,9 +1,16 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.cytoscape.application.events.SetCurrentNetworkListener;
+import org.cytoscape.application.swing.CySwingApplication;
+import org.cytoscape.application.swing.CytoPanel;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.command.CommandExecutorTaskFactory;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
@@ -17,13 +24,71 @@ public class AnalyzerManager {
 
 	final CyServiceRegistrar registrar; 
 	final HashMap<String, String> settings;
+	final CySwingApplication application;
+	ResultsPanel resultsPanel;
 
-	public AnalyzerManager(final CyServiceRegistrar registrar) {
-		this.registrar = registrar;
+	public AnalyzerManager(final CyServiceRegistrar reg, CySwingApplication desktop) {
+		registrar = reg;
 		this.taskManager = registrar.getService(TaskManager.class);
+		application = desktop;
+		resultsPanel = new ResultsPanel(this);
 		settings = new HashMap<String, String>();
 	}
 
+
+	public void makeDegreeHisto() {
+		System.out.println("makeDegreeHisto");
+		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
+		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
+		Map<String, Object> args = new HashMap<>();
+//		args.put("url",url);
+		args.put("x","Degree");
+		TaskIterator ti = commandTF.createTaskIterator("cychart","histogram",args, null);
+		taskManager.execute(ti);
+		
+	}
+	public void makeBetweenScatter() {
+		System.out.println("makeBetweenScatter");
+		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
+		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
+		Map<String, Object> args = new HashMap<>();
+//		args.put("url",url);
+		args.put("x","Degree");
+		args.put("y","BetweennessCentrality");
+		TaskIterator ti = commandTF.createTaskIterator("cychart","scatter",args, null);
+		taskManager.execute(ti);
+		
+	}
+	public void makeClosenessClusterScatter() {
+		System.out.println("makeClosenessClusterScatter");
+		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
+		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
+		Map<String, Object> args = new HashMap<>();
+//		args.put("url",url);
+		args.put("x","ClosenessCentrality");
+		args.put("y","BetweennessCentrality");
+		TaskIterator ti = commandTF.createTaskIterator("cychart","scatter",args, null);
+		taskManager.execute(ti);
+		
+	}
+
+	// create and register the results panel, 
+	// and listen for network change events, so we always show the current network stats
+
+	public void registerResultsPanel()
+	{
+		registerService(resultsPanel, CytoPanelComponent.class, null);
+		registerService(resultsPanel, SetCurrentNetworkListener.class, null);
+		CytoPanel panel = application.getCytoPanel(CytoPanelName.EAST);
+		panel.setState(CytoPanelState.DOCK);
+	}
+	
+	public void unregisterResultsPanel()
+	{
+		unregisterService(resultsPanel, CytoPanelComponent.class);
+		unregisterService(resultsPanel, SetCurrentNetworkListener.class);
+	}
+	
 	public String getSetting(String setting) {		return settings.get(setting);	}
 
 	public void setSetting(String setting, double value) {		setSetting(setting, String.valueOf(value));	}

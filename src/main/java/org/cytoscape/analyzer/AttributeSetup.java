@@ -1,6 +1,6 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
-import java.org.cytoscape.analyzer.util.Msgs;
+import org.cytoscape.analyzer.util.Msgs;
 
 /*
  * #%L

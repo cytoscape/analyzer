@@ -1,4 +1,4 @@
-package java.org.cytoscape.analyzer.util;
+package org.cytoscape.analyzer.util;
 
 
 /**

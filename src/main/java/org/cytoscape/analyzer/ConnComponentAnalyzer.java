@@ -1,6 +1,7 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer;
 
-import java.org.cytoscape.analyzer.util.CyNetworkUtils;
+import org.cytoscape.analyzer.util.ConnectedComponentInfo;
+import org.cytoscape.analyzer.util.CyNetworkUtils;
 
 /*
  * #%L

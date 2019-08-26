@@ -1,6 +1,7 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer.tasks;
 
 
+import org.cytoscape.analyzer.AnalyzerManager;
 import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 

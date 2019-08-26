@@ -1,15 +1,6 @@
-package java.org.cytoscape.analyzer;
+package org.cytoscape.analyzer.util;
 
 import java.awt.geom.Point2D;
-import java.org.cytoscape.analyzer.util.CyNetworkUtils;
-import java.org.cytoscape.analyzer.util.DegreeDistribution;
-import java.org.cytoscape.analyzer.util.LogBinDistribution;
-import java.org.cytoscape.analyzer.util.LongHistogram;
-import java.org.cytoscape.analyzer.util.Msgs;
-import java.org.cytoscape.analyzer.util.MutInteger;
-import java.org.cytoscape.analyzer.util.PathLengthData;
-import java.org.cytoscape.analyzer.util.Points2D;
-import java.org.cytoscape.analyzer.util.SumCountPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +10,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.cytoscape.analyzer.ConnComponentAnalyzer;
+import org.cytoscape.analyzer.NetworkAnalyzer;
+import org.cytoscape.analyzer.UndirNetworkAnalyzer;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 
