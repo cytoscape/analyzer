@@ -225,6 +225,7 @@ public class ResultsPanel extends JPanel
 	public void setResultString(String out) {
 		label.setText(out);
 		intro.setVisible(true);
+		enableButtons(true);
 		
 	}
 }

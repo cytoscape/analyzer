@@ -1,6 +1,4 @@
-package org.cytoscape.analyzer;
-
-import org.cytoscape.analyzer.util.Msgs;
+package org.cytoscape.analyzer.util;
 
 /*
  * #%L

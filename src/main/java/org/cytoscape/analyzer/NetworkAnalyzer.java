@@ -101,7 +101,7 @@ public abstract class NetworkAnalyzer {
 		netTable.getRow(network.getSUID()).set(columnName, json);
 		
 		
-		String out = stats.formattedOutput(stats.getParameters());
+		String out = NetworkStats.formattedOutput(stats.getParameters());
 		CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
 		int nPanels = panel.getCytoPanelComponentCount();

@@ -1,3 +1,4 @@
+package org.cytoscape.analyzer.util;
 //package org.cytoscape.analyzer;
 //
 //import org.junit.Test;

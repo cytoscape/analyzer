@@ -1,6 +1,7 @@
 package org.cytoscape.analyzer;
 
 
+import org.cytoscape.analyzer.util.AttributeSetup;
 import org.cytoscape.analyzer.util.ConnectedComponentInfo;
 import org.cytoscape.analyzer.util.NetworkInterpretation;
 import org.cytoscape.analyzer.util.PathLengthData;

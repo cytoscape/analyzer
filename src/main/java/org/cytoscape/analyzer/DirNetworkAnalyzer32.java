@@ -39,6 +39,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.cytoscape.analyzer.util.AttributeSetup;
 import org.cytoscape.analyzer.util.ConnectedComponentInfo;
 import org.cytoscape.analyzer.util.CyNetworkUtils;
 import org.cytoscape.analyzer.util.DegreeDistribution;
@@ -81,7 +82,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 		nodeCount = stats.getInt("nodeCount");
 		sPathLengths = new long[nodeCount];
 		useNodeAttributes = true;  //SettingsSerializer.getPluginSettings().getUseNodeAttributes();
-		useEdgeAttributes = false; //SettingsSerializer.getPluginSettings().getUseEdgeAttributes();
+		useEdgeAttributes = true; //SettingsSerializer.getPluginSettings().getUseEdgeAttributes();
 		roundingDigits = 8;
 		numberOfIsolatedNodes = 0;
 		numberOfSelfLoops = 0;
@@ -124,6 +125,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 		Set<ConnectedComponentInfo> components = analyzer.findComponents();
 		final int connectedComponentsCount = components.size();
 
+		System.out.println(connectedComponentsCount + " components");
 		// Compute node and edge betweenness
 		for (ConnectedComponentInfo aCompInfo : components) {
 
@@ -131,6 +133,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 			final Set<CyNode> connNodes = analyzer.getNodesOf(aCompInfo);
 			final Set<CyEdge> connEdges = new HashSet<CyEdge>();
 
+			//-----------------------------------------------------------------------
 			// Convert the graph into an array representation to accelerate traversal
 			final int numNodes = connNodes.size();
 			final int[] edgeOffsets = new int[numNodes + 1];
@@ -210,7 +213,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 					inEdges[offset++] = inNeighborID;
 				}
 			}
-			
+			//-----------------------------------------------------------------------
 			nodeBetweennessLean = new double[numNodes];
 			edgeBetweennessLean = new double[connEdges.size()];
 			stressLean = new long[numNodes];
@@ -246,7 +249,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 					outDegreeDist.addObservation(outCyEdges.size());
 				}
 
-				Set<CyNode> neighbors = getNeighbors(node, inCyEdges, outCyEdges);
+//				Set<CyNode> neighbors = getNeighbors(node, inCyEdges, outCyEdges);
 				int neighborCount = lastEdge - firstEdge;
 				int outNeighborCount = outLastEdge - outFirstEdge;
 				int inNeighborCount = inLastEdge - inFirstEdge;
@@ -363,30 +366,18 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 					break;
 	
 				// Reduce results into global (parent's) variables
-				synchronized (this) {
-					diameter = Math.max(diameter, localDiameter);
-					radius = Math.min(radius, localRadius);
-					for (int i = 0; i < localSPathLengths.length; i++)
-						sPathLengths[i] += localSPathLengths[i];
-					for (int i = 0; i < localNodeBetweenness.length; i++)
-						nodeBetweennessLean[i] += localNodeBetweenness[i];
-					for (int i = 0; i < localEdgeBetweenness.length; i++)
-						edgeBetweennessLean[i] += localEdgeBetweenness[i];
-					for (int i = 0; i < localStress.length; i++)
-						stressLean[i] += localStress[i];
-				}
+				diameter = Math.max(diameter, localDiameter);
+				radius = Math.min(radius, localRadius);
+				for (int i = 0; i < localSPathLengths.length; i++)
+					sPathLengths[i] += localSPathLengths[i];
+				for (int i = 0; i < localNodeBetweenness.length; i++)
+					nodeBetweennessLean[i] += localNodeBetweenness[i];
+				for (int i = 0; i < localEdgeBetweenness.length; i++)
+					edgeBetweennessLean[i] += localEdgeBetweenness[i];
+				for (int i = 0; i < localStress.length; i++)
+					stressLean[i] += localStress[i];
 		
 
-//			int numThreads = Runtime.getRuntime().availableProcessors();
-//			ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-//			List<Future<?>> futures = new LinkedList<Future<?>>();
-//			for (int i = 0; i < numThreads; i++)
-//				futures.add(threadPool.submit(new NodeTask(this, i)));
-//			for (Future<?> future : futures)
-//				try {
-//					future.get();
-//				} catch (Exception e) { } 
-//			
 			if (cancelled)
 			{
 				analysisFinished();
@@ -409,8 +400,8 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 					stressDist.addObservation(nodeStress);
 					
 					if (useNodeAttributes) {
-//						row.set("nbt", nb);
-						row.set("stress", nodeStress);
+						row.set(Msgs.getAttr("nbt"), nb);
+						row.set(Msgs.getAttr("stress"), nodeStress);
 					}
 				}
 
@@ -427,7 +418,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 							eb = edgeBetweennessLean[edgeHash2Int.get(edgeHash)];
 						
 						if (Double.isNaN(eb)) 	eb = 0.0;
-						network.getRow(edge).set("ebt", eb);
+						network.getRow(edge).set(Msgs.getAttr("ebt"), eb);
 					}
 				}
 			}
@@ -469,7 +460,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 		if (neighborsAccum != null) {
 			stats.set("avNeighbors", neighborsAccum.getAverage());
 		}
-		stats.set("density", (double) (outNeighbors / (nodeCount * (nodeCount - 1))));
+		stats.set("density", ( ((double)outNeighbors) / (nodeCount * (nodeCount - 1))));
 		stats.set("ncc", connectedComponentsCount);
 		stats.set("usn", numberOfIsolatedNodes);
 		stats.set("nsl", numberOfSelfLoops);
@@ -501,6 +492,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 		doOutput();
 	}
 	}
+	//-----------------------------------------------------------------------
 
 	private double getAverages(HashMap<Integer, SumCountPair> inNCps2) {
 		// TODO Auto-generated method stub

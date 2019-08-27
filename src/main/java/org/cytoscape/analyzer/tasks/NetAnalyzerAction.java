@@ -1,4 +1,4 @@
-package org.cytoscape.analyzer;
+package org.cytoscape.analyzer.tasks;
 
 
 import java.util.Map;

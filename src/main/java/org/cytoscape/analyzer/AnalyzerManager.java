@@ -74,19 +74,23 @@ public class AnalyzerManager {
 
 	// create and register the results panel, 
 	// and listen for network change events, so we always show the current network stats
-
+	boolean isRegistered = false;
 	public void registerResultsPanel()
 	{
-		registerService(resultsPanel, CytoPanelComponent.class, null);
-		registerService(resultsPanel, SetCurrentNetworkListener.class, null);
+		if (isRegistered) return;
+		registerService(resultsPanel, CytoPanelComponent.class, new Properties());
+		registerService(resultsPanel, SetCurrentNetworkListener.class, new Properties());
 		CytoPanel panel = application.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
+		isRegistered = true;
 	}
 	
 	public void unregisterResultsPanel()
 	{
+		if (!isRegistered) return;
 		unregisterService(resultsPanel, CytoPanelComponent.class);
 		unregisterService(resultsPanel, SetCurrentNetworkListener.class);
+		isRegistered = false;
 	}
 	
 	public String getSetting(String setting) {		return settings.get(setting);	}

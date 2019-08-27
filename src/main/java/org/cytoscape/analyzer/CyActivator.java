@@ -91,27 +91,28 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(IN_TOOL_BAR, "false");
 			registerService(bc,analyzeNetworkTaskFactory, TaskFactory.class, props);
 		}
-		{			// adding a second task
-			props.clear();
-			props.put(ID, "analyzeDegreeTaskFactory");	
-			props.put(TITLE, "Compute Degree Only");
-			props.put(COMMAND_NAMESPACE, "analyzer");
-			props.put(COMMAND, "degree");
-			props.put(COMMAND_DESCRIPTION,  "Calculate the degree of nodes in statistics on the current network");
-			props.put(COMMAND_LONG_DESCRIPTION, "Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
-			props.put(COMMAND_EXAMPLE_JSON, "{   \"networkTitle\": \"galFiltered.sif (undirected)\",   \"nodeCount\": \"330\",  \"avNeighbors\": \"2.167\"}");
-			props.put(COMMAND_SUPPORTS_JSON, "true");
-			props.put(ENABLE_FOR, "network");
+//		{			// adding a second task
+//			props.clear();
+//			props.put(ID, "analyzeDegreeTaskFactory");	
+//			props.put(TITLE, "Compute Degree Only");
+//			props.put(COMMAND_NAMESPACE, "analyzer");
+//			props.put(COMMAND, "degree");
+//			props.put(COMMAND_DESCRIPTION,  "Calculate the degree of nodes in statistics on the current network");
+//			props.put(COMMAND_LONG_DESCRIPTION, "Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
+//			props.put(COMMAND_EXAMPLE_JSON, "{   \"networkTitle\": \"galFiltered.sif (undirected)\",   \"nodeCount\": \"330\",  \"avNeighbors\": \"2.167\"}");
+//			props.put(COMMAND_SUPPORTS_JSON, "true");
+//			props.put(ENABLE_FOR, "network");
+//
+//			AnalyzeNetworkTaskFactory degreeOnlyNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager );
+//			registerService(bc,degreeOnlyNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
+//			props.put(PREFERRED_MENU,"Tools");
+//			props.put(MENU_GRAVITY,"9.15");
+//			props.put(IN_MENU_BAR, "true");
+//			props.put(IN_TOOL_BAR, "false");
+//			registerService(bc,degreeOnlyNetworkTaskFactory, TaskFactory.class, props);
+//		}
 
-			AnalyzeNetworkTaskFactory degreeOnlyNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager );
-			registerService(bc,degreeOnlyNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
-			props.put(PREFERRED_MENU,"Tools");
-			props.put(MENU_GRAVITY,"9.15");
-			props.put(IN_MENU_BAR, "true");
-			props.put(IN_TOOL_BAR, "false");
-			registerService(bc,degreeOnlyNetworkTaskFactory, TaskFactory.class, props);
-		}
-
+		// MOVED TO:  manager.registerResultsPanel
 //		{	// create and register the results panel, 
 //			// and listen for network change events, 
 //			// so we always show the current network stats
