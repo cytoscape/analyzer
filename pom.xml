@@ -18,7 +18,7 @@
 	<artifactId>analyzer</artifactId>
 	<packaging>bundle</packaging>
 	<name>Analyzer</name>
-	<version>4.0.2</version>   <!-- TODO keep in synch with CyActivator.122-->
+	<version>4.1.1</version>   <!-- TODO keep in synch with CyActivator.122-->
 
 	<scm>
 		<connection>scm:git:git://github.com/cytoscape/network-analyzer.git</connection>
@@ -111,6 +111,7 @@
 						<Embed-Dependency>*;scope=!provided</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
 						<Import-Package>*;resolution:=optional</Import-Package>
+						<Cytoscape-App-Dependencies>cyChart;</Cytoscape-App-Dependencies>				
 					</instructions>
 				</configuration>
 			</plugin>

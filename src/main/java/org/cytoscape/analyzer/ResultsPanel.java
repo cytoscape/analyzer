@@ -88,7 +88,7 @@ public class ResultsPanel extends JPanel
 		
 		label.setText(stats);
 	}
-	private void enableButtons(boolean b) {
+	public void enableButtons(boolean b) {
 		degreeHisto.setEnabled(b);;
 		betweenScatter.setEnabled(b);
 		closenessClusterScatter.setEnabled(b);

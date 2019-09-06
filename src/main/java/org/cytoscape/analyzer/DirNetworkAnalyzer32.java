@@ -125,7 +125,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 		Set<ConnectedComponentInfo> components = analyzer.findComponents();
 		final int connectedComponentsCount = components.size();
 
-		System.out.println(connectedComponentsCount + " components");
+		if (NetworkAnalyzer.verbose) 	System.out.println(connectedComponentsCount + " components");
 		// Compute node and edge betweenness
 		for (ConnectedComponentInfo aCompInfo : components) {
 

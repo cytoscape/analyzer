@@ -30,6 +30,7 @@ package org.cytoscape.analyzer.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.cytoscape.analyzer.NetworkAnalyzer;
 import org.cytoscape.model.CyNetwork;
 
 /**
@@ -130,7 +131,7 @@ public class NetworkStats {
 
 	public void dump()
 	{
-		System.out.println(jsonOutput(params));
+		if (NetworkAnalyzer.verbose) 	System.out.println(jsonOutput(params));
 	}
 	
 	static String[] keys = {"networkTitle", "", "nodeCount", "edgeCount", "avNeighbors", "diameter", "radius", "avSpl",

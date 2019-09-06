@@ -20,12 +20,12 @@ import org.cytoscape.work.TaskObserver;
 
 public class AnalyzerManager {
 
-	final TaskManager<?, ?> taskManager;
+	final private TaskManager<?, ?> taskManager;
+	final private CyServiceRegistrar registrar; 
+	final private HashMap<String, String> settings;
+	final private CySwingApplication application;
 
-	final CyServiceRegistrar registrar; 
-	final HashMap<String, String> settings;
-	final CySwingApplication application;
-	ResultsPanel resultsPanel;
+	private ResultsPanel resultsPanel;
 
 	public AnalyzerManager(final CyServiceRegistrar reg, CySwingApplication desktop) {
 		registrar = reg;
@@ -37,7 +37,7 @@ public class AnalyzerManager {
 
 
 	public void makeDegreeHisto() {
-		System.out.println("makeDegreeHisto");
+		if (NetworkAnalyzer.verbose) 	System.out.println("makeDegreeHisto");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
@@ -48,7 +48,7 @@ public class AnalyzerManager {
 		
 	}
 	public void makeBetweenScatter() {
-		System.out.println("makeBetweenScatter");
+		if (NetworkAnalyzer.verbose) 	System.out.println("makeBetweenScatter");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
@@ -60,7 +60,7 @@ public class AnalyzerManager {
 		
 	}
 	public void makeClosenessClusterScatter() {
-		System.out.println("makeClosenessClusterScatter");
+		if (NetworkAnalyzer.verbose) 	System.out.println("makeClosenessClusterScatter");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
@@ -83,6 +83,7 @@ public class AnalyzerManager {
 		CytoPanel panel = application.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
 		isRegistered = true;
+		resultsPanel.enableButtons(true);
 	}
 	
 	public void unregisterResultsPanel()
@@ -90,6 +91,7 @@ public class AnalyzerManager {
 		if (!isRegistered) return;
 		unregisterService(resultsPanel, CytoPanelComponent.class);
 		unregisterService(resultsPanel, SetCurrentNetworkListener.class);
+		resultsPanel.enableButtons(false);
 		isRegistered = false;
 	}
 	

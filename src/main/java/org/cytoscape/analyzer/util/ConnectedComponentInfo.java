@@ -65,7 +65,7 @@ public class ConnectedComponentInfo {
 		parent = analyzer;
 		sharedNeighborsHist = new long[size];
 		sPathLengths = new long[size];
-		System.out.println("Component of size " + aSize);
+		if (NetworkAnalyzer.verbose) 	System.out.println("Component of size " + aSize);
 	}
 	NetworkAnalyzer parent;
 boolean isPaired = false;
