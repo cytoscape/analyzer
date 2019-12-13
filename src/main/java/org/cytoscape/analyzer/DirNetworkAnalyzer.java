@@ -62,7 +62,7 @@ import org.w3c.dom.Node;
 /**
  * Network analyzer for networks that contain directed edges only.
   */
-public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
+public class DirNetworkAnalyzer extends NetworkAnalyzer {
 
 	/**
 	 * Initializes a new instance of <code>DirNetworkAnalyzer</code>.
@@ -76,7 +76,7 @@ public class DirNetworkAnalyzer32 extends NetworkAnalyzer {
 	 * @param aInterpr
 	 *            Interpretation of the network edges.
 	 */
-	public DirNetworkAnalyzer32(CyNetwork aNetwork, Set<CyNode> aNodeSet, NetworkInterpretation aInterpr, CySwingApplication app, AnalyzerManager mgr) 
+	public DirNetworkAnalyzer(CyNetwork aNetwork, Set<CyNode> aNodeSet, NetworkInterpretation aInterpr, CySwingApplication app, AnalyzerManager mgr) 
 	{
 		super(aNetwork, aInterpr, app, mgr);
 		nodeCount = stats.getInt("nodeCount");

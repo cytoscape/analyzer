@@ -49,6 +49,7 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 	@Override
 	public void computeAll() 
 	{
+	System.out.println("computeALL");	
 		long time = System.currentTimeMillis();
 		analysisStarting();
 		ConnComponentAnalyzer cca = new ConnComponentAnalyzer(this,network);						// Compute number of connected components

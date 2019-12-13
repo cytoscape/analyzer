@@ -12,13 +12,15 @@ import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.command.CommandExecutorTaskFactory;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.session.events.SessionLoadedEvent;
+import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 
 
-public class AnalyzerManager {
+public class AnalyzerManager implements SessionLoadedListener{
 
 	final private TaskManager<?, ?> taskManager;
 	final private CyServiceRegistrar registrar; 
@@ -36,6 +38,11 @@ public class AnalyzerManager {
 	}
 
 
+	@Override
+	public void handleEvent(SessionLoadedEvent e) {
+		unregisterResultsPanel();
+		
+	}
 	public void makeDegreeHisto() {
 		if (NetworkAnalyzer.verbose) 	System.out.println("makeDegreeHisto");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
@@ -86,6 +93,7 @@ public class AnalyzerManager {
 		resultsPanel.enableButtons(true);
 	}
 	
+	// when a session closes, unregister the panel.
 	public void unregisterResultsPanel()
 	{
 		if (!isRegistered) return;
@@ -145,5 +153,7 @@ public class AnalyzerManager {
 	public void unregisterService(Object service, Class<?> serviceClass) {
 		registrar.unregisterService(service, serviceClass);
 	}
+
+
 
 }

@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.cytoscape.analyzer.AnalyzerManager;
-import org.cytoscape.analyzer.DirNetworkAnalyzer32;
+import org.cytoscape.analyzer.DirNetworkAnalyzer;
 import org.cytoscape.analyzer.NetworkAnalyzer;
 import org.cytoscape.analyzer.UndirNetworkAnalyzer;
 import org.cytoscape.analyzer.util.CyNetworkUtils;
@@ -75,7 +75,7 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		desktop = app;
 		registrar = reg;
 		manager = mgr;	
-		directed = anyDirected(networks);   // always true:   AnalyzeNetworkTaskFactory.isDirected(networks);
+		directed = anyDirected(networks);   // this relies on the style defined, so is not error-free
 	}
 
 	private Boolean anyDirected(Collection<CyNetwork> networks) {
@@ -85,6 +85,7 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		return false;
 	}
 
+		// guess if the network is directed, based on it having a arrow shape defined on the target
 	private boolean isDireceted(CyNetwork net) {
 		CyNetworkView view = registrar.getService(CyApplicationManager.class).getCurrentNetworkView();
 		ArrowShape arrow = (ArrowShape) view.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
@@ -100,16 +101,19 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		taskMonitor.setTitle("Analyzing Networks");
 
 		for (final CyNetwork network : networks) {
-			taskMonitor.setStatusMessage("Analyzing Network: "
-					+ network.getRow(network).get(CyNetwork.NAME, String.class));
+			System.out.println((network == null ? "null" : network.getSUID()));
+			taskMonitor.setStatusMessage("Analyzing Network: " + network.getRow(network).get(CyNetwork.NAME, String.class));
 			
-			final Set<CyNode> selectedNodes;
-			if(selectedOnly) {
-				final Collection<CyRow> matched = network.getDefaultNodeTable().getMatchingRows(CyNetwork.SELECTED, true);
-				selectedNodes = new HashSet<CyNode>();
-				for(CyRow row : matched)
-					selectedNodes.add(network.getNode(row.get(CyIdentifiable.SUID, Long.class)));
-			} else 	selectedNodes = null;
+			final Set<CyNode> selectedNodes = new HashSet<CyNode>();
+			Collection<CyRow> matched;
+			if(selectedOnly) 
+				matched = network.getDefaultNodeTable().getMatchingRows(CyNetwork.SELECTED, true);
+			else 	
+				matched = network.getDefaultNodeTable().getAllRows();
+			
+			for(CyRow row : matched)
+				selectedNodes.add(network.getNode(row.get(CyIdentifiable.SUID, Long.class)));
+			System.out.println(("analyze " + network.getSUID()));
 			analyze(network, selectedNodes);
 			processed = processed+increment;
 			taskMonitor.setProgress(processed);
@@ -117,14 +121,20 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 	}
 
 	private void analyze(final CyNetwork network, final Set<CyNode> nodes) {
+		System.out.println("A:" + (network == null ? "null" : network.getSUID()));
+		System.out.println("B:" + ( nodes == null ? 0 : nodes.size()));
+		
 		final NetworkInspection status = CyNetworkUtils.inspectNetwork(network);
 		final NetworkInterpretation interpr = interpretNetwork(status);
-		
+	
+		System.out.println((network == null ? "null" : network.getSUID()) + " " + nodes == null ? 0 : nodes.size());
 		if(interpr == null)
 			throw new NullPointerException("NetworkInterpretation is null.");
-		
+		if (nodes.size() < 4)
+			throw new IllegalArgumentException("Network too small: 4 node minimum.");
+
 		if (directed)
-			analyzer = new DirNetworkAnalyzer32(network, nodes, interpr, desktop, manager);
+			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop, manager);
 		else
 			analyzer = new UndirNetworkAnalyzer(network, interpr, desktop, manager);
 		

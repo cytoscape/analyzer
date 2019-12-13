@@ -111,8 +111,9 @@
 						<Embed-Dependency>*;scope=!provided</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
 						<Import-Package>*;resolution:=optional</Import-Package>
-<!-- 						<Cytoscape-App-Dependencies>cyChart;0.2.0</Cytoscape-App-Dependencies>				
- -->					</instructions>
+
+						<Cytoscape-App-Dependencies>cyChart;0.1.5</Cytoscape-App-Dependencies>				
+					</instructions>
 				</configuration>
 			</plugin>
 		</plugins>

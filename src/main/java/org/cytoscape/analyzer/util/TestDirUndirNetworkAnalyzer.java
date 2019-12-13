@@ -1,9 +1,12 @@
-package org.cytoscape.analyzer.util;
-//package org.cytoscape.analyzer;
-//
-//import org.junit.Test;
+//package org.cytoscape.analyzer.util;
 //import static org.junit.Assert.fail;
+//
 //import java.util.HashMap;
+//
+//import org.cytoscape.analyzer.DirNetworkAnalyzer;
+//import org.cytoscape.analyzer.UndirNetworkAnalyzer;
+////
+//import org.junit.Test;
 //
 //// Tests some of the methods in the NetworkAnalyzer classes that don't make table entries
 //public class TestDirUndirNetworkAnalyzer 
@@ -51,7 +54,7 @@ package org.cytoscape.analyzer.util;
 //			for (int n1 = 0; n1 < numNodes; n1++)
 //				for (int n2 = edgeOffsets[n1]; n2 < edgeOffsets[n1 + 1]; n2++)
 //				{
-//					long id = UndirNetworkAnalyzer.computeEdgeHash(n1, edges[n2]);
+//					long id = ConnectedComponentInfo.computeEdgeHash(n1, edges[n2]);
 //					if (!edgeHash2Int.containsKey(id))
 //						edgeHash2Int.put(id, e++);
 //					edgeIDs[n2] = edgeHash2Int.get(id);
@@ -72,7 +75,7 @@ package org.cytoscape.analyzer.util;
 //		for (int n1 = 0; n1 < numNodes; n1++)
 //			for (int n2 = edgeOffsets[n1]; n2 < edgeOffsets[n1 + 1]; n2++)
 //			{
-//				long id = UndirNetworkAnalyzer.computeEdgeHash(n1, edges[n2]);
+//				long id = ConnectedComponentInfo.computeEdgeHash(n1, edges[n2]);
 //				if (Math.abs(edgeBetweenness[edgeHash2Int.get(id)] - refEdgeBetweenness[edgeHash2Int.get(id)]) > 1e-3)
 //					fail("Edge betweenness metric too far off from reference.");
 //			}

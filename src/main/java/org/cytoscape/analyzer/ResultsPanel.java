@@ -158,7 +158,7 @@ public class ResultsPanel extends JPanel
 	@Override	public Icon getIcon() {		return null;	}
 	@Override	public String getTitle() {		return "Analyzer";	}
 
-	static String INTRO = "Summary statistics of the network.  \nNode specific statistics are found in the node table.";
+	static String INTRO = "Summary statistics of the network.  \nNode specific statistics are found in the node table,\nand Edge Betweenness is added to the edge table.";
 	///-----------------------------------------------
 	private JPanel createLabelPanel() {
 		JPanel labelPanel = new JPanel();
@@ -169,7 +169,7 @@ public class ResultsPanel extends JPanel
 		intro.setVisible(false);
 		intro.setText(INTRO);
 		intro.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-		intro.setMaximumSize(new Dimension(300, 40));
+		intro.setMaximumSize(new Dimension(300, 54));
 		label = new JTextArea();
 		labelPanel.add(intro);
 		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
