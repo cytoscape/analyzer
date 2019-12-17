@@ -20,6 +20,7 @@ import org.cytoscape.model.CyNode;
  */
 public class UndirNetworkAnalyzer extends NetworkAnalyzer
 {
+	@Override public boolean isDirected() { return false;	}
 	/**
 	 * Initializes a new instance of <code>UndirNetworkAnalyzer</code>.
 	 * 
@@ -49,7 +50,7 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 	@Override
 	public void computeAll() 
 	{
-	System.out.println("computeALL");	
+//	System.out.println("computeALL");	
 		long time = System.currentTimeMillis();
 		analysisStarting();
 		ConnComponentAnalyzer cca = new ConnComponentAnalyzer(this,network);						// Compute number of connected components

@@ -431,14 +431,15 @@ boolean isPaired = false;
 		if (neighborCount == 0)
 			aParams.unconnectedNodeCount++;
 	
-		// Number of self-loops and number of directed/undireceted edges
+		// Number of self-loops and number of directed/undirected edges
 		// calculation
+		boolean isDirected = parent.isDirected();
 		int selfLoops = 0;
 		int dirEdges = 0;
 		for (int j = 0; j < aIncEdges.size(); j++) 
 		{
 			CyEdge e = aIncEdges.get(j);
-			if (e.isDirected())
+			if (isDirected && e.isDirected())
 				dirEdges++;
 			if (e.getSource() == e.getTarget())
 				selfLoops++;

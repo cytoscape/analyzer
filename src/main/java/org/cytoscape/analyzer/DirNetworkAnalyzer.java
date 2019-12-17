@@ -64,6 +64,7 @@ import org.w3c.dom.Node;
   */
 public class DirNetworkAnalyzer extends NetworkAnalyzer {
 
+	@Override public boolean isDirected() { return true;	}
 	/**
 	 * Initializes a new instance of <code>DirNetworkAnalyzer</code>.
 	 * 

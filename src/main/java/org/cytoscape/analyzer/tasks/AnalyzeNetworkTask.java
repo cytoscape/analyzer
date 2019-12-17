@@ -101,7 +101,7 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		taskMonitor.setTitle("Analyzing Networks");
 
 		for (final CyNetwork network : networks) {
-			System.out.println((network == null ? "null" : network.getSUID()));
+//			System.out.println((network == null ? "null" : network.getSUID()));
 			taskMonitor.setStatusMessage("Analyzing Network: " + network.getRow(network).get(CyNetwork.NAME, String.class));
 			
 			final Set<CyNode> selectedNodes = new HashSet<CyNode>();
@@ -113,7 +113,7 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 			
 			for(CyRow row : matched)
 				selectedNodes.add(network.getNode(row.get(CyIdentifiable.SUID, Long.class)));
-			System.out.println(("analyze " + network.getSUID()));
+//			System.out.println(("analyze " + network.getSUID()));
 			analyze(network, selectedNodes);
 			processed = processed+increment;
 			taskMonitor.setProgress(processed);
@@ -121,13 +121,13 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 	}
 
 	private void analyze(final CyNetwork network, final Set<CyNode> nodes) {
-		System.out.println("A:" + (network == null ? "null" : network.getSUID()));
-		System.out.println("B:" + ( nodes == null ? 0 : nodes.size()));
+//		System.out.println("A:" + (network == null ? "null" : network.getSUID()));
+//		System.out.println("B:" + ( nodes == null ? 0 : nodes.size()));
 		
 		final NetworkInspection status = CyNetworkUtils.inspectNetwork(network);
 		final NetworkInterpretation interpr = interpretNetwork(status);
 	
-		System.out.println((network == null ? "null" : network.getSUID()) + " " + nodes == null ? 0 : nodes.size());
+//		System.out.println((network == null ? "null" : network.getSUID()) + " " + nodes == null ? 0 : nodes.size());
 		if(interpr == null)
 			throw new NullPointerException("NetworkInterpretation is null.");
 		if (nodes.size() < 4)

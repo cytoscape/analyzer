@@ -55,6 +55,7 @@ import org.cytoscape.model.subnetwork.CySubNetwork;
  */
 public abstract class NetworkAnalyzer {
 	
+	public abstract boolean isDirected();
 	public static final boolean verbose = false;
 	/**
 	 * Gets the title of the network being analyzed.
