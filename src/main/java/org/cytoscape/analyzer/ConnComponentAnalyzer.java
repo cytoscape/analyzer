@@ -1,8 +1,5 @@
 package org.cytoscape.analyzer;
 
-import org.cytoscape.analyzer.util.ConnectedComponentInfo;
-import org.cytoscape.analyzer.util.CyNetworkUtils;
-
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
@@ -34,6 +31,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.cytoscape.analyzer.util.ConnectedComponentInfo;
+import org.cytoscape.analyzer.util.CyNetworkUtils;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 
