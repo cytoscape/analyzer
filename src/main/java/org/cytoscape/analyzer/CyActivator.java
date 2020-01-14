@@ -123,7 +123,7 @@ public class CyActivator extends AbstractCyActivator {
 //			panel.setState(CytoPanelState.DOCK);
 //		}
 
-		{	String version = "4.3.0";			// TODO keep in synch with POM
+		{	String version = "4.3.0-SNAPSHOT";			// TODO keep in synch with POM
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
 			props = new Properties();

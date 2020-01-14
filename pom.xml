@@ -20,7 +20,7 @@
 	<artifactId>analyzer</artifactId>
 	<packaging>bundle</packaging>
 	<name>Analyzer</name>
-	<version>4.3.0</version>	<!-- TODO keep in synch with CyActivator.122-->
+	<version>4.3.0-SNAPSHOT</version>	<!-- TODO keep in synch with CyActivator.122-->
 
 	<scm>
 		<connection>scm:git:git://github.com/cytoscape/network-analyzer.git</connection>
