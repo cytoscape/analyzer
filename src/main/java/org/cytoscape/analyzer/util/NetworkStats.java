@@ -178,10 +178,12 @@ public class NetworkStats {
 				String s = Msgs.get(key);
 				if (s != null) 
 					key = s;
-				if (val instanceof String || val instanceof Integer)
+				if (val instanceof String)
 					out.append(key).append("\t ").append(val).append('\n');
-				if (val instanceof Double )
-					out.append(String.format("%s\t%.3f\n", key ,val));
+				else if (val instanceof Double )
+					out.append(String.format("%s\t%8.3f\n", key ,val));
+				else if (val instanceof Integer )
+					out.append(String.format("%s\t%3d\n", key ,val));
 			}
 		}
 		return out.toString();

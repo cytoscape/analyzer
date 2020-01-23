@@ -93,14 +93,15 @@ public abstract class NetworkAnalyzer {
 	public void doOutput()
 	{
 		String json = stats.jsonOutput();
-		CyTable netTable = network.getDefaultNetworkTable();
-		CyColumn col = netTable.getColumn(columnName);
+//		CyTable netTable = network.getDefaultNetworkTable();
+		CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
+		CyColumn col = hiddenTable.getColumn(columnName);
 		if (col == null)
 		{
-			netTable.createColumn(columnName, String.class, true);
-			col = netTable.getColumn(columnName);
+			hiddenTable.createColumn(columnName, String.class, true);
+			col = hiddenTable.getColumn(columnName);
 		}
-		netTable.getRow(network.getSUID()).set(columnName, json);
+		hiddenTable.getRow(network.getSUID()).set(columnName, json);
 		
 		
 		String out = NetworkStats.formattedOutput(stats.getParameters());

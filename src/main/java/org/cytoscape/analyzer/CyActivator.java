@@ -123,7 +123,7 @@ public class CyActivator extends AbstractCyActivator {
 //			panel.setState(CytoPanelState.DOCK);
 //		}
 
-		{	String version = "4.3.0";			// TODO keep in synch with POM
+		{	String version = "4.3.1";			// TODO keep in synch with POM
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
 			props = new Properties();
@@ -132,7 +132,7 @@ public class CyActivator extends AbstractCyActivator {
 			props.setProperty(COMMAND_DESCRIPTION, "Display the analyzer version");
 			props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the analyzer app.");
 			props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"1.0\"}");
+			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"4.3.1\"}");
 			registerService(bc, versionTask, TaskFactory.class, props);
 
 		}

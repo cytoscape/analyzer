@@ -26,6 +26,7 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.util.swing.IconManager;
 
 
@@ -79,7 +80,9 @@ public class ResultsPanel extends JPanel
 				stats = "Empty Network";
 			else 
 			{
-				stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
+//				stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
+				CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
+				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
 				stats = parseJson(stats);
 			}
 			if (stats == null)
