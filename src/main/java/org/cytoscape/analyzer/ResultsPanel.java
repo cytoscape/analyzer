@@ -1,24 +1,28 @@
 package org.cytoscape.analyzer;
 
 
+import static javax.swing.GroupLayout.DEFAULT_SIZE;
+import static javax.swing.GroupLayout.Alignment.CENTER;
+import static javax.swing.GroupLayout.Alignment.LEADING;
+
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.UIManager;
 
+import org.cytoscape.analyzer.util.IconUtil;
 import org.cytoscape.analyzer.util.NetworkStats;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkEvent;
@@ -27,7 +31,8 @@ import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.util.swing.IconManager;
+import org.cytoscape.util.swing.LookAndFeelUtil;
+import org.cytoscape.util.swing.TextIcon;
 
 
 /**
@@ -41,8 +46,10 @@ public class ResultsPanel extends JPanel
 	private static final long serialVersionUID = 1L;
 	final AnalyzerManager manager;
 	final CyApplicationManager appManager;
-	final Font iconFont;
-	private JTextArea intro;
+	private Icon icon;
+	private JLabel title;
+	private JLabel info1;
+	private JLabel info2;
 	private JTextArea label;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
@@ -52,16 +59,52 @@ public class ResultsPanel extends JPanel
 //	private String enrichmentType = "entireNetwork";
 
 	public ResultsPanel(final AnalyzerManager manager) {
-		super();
 		this.manager = manager;
 		this.appManager = manager.getService(CyApplicationManager.class);
 		this.network = appManager.getCurrentNetwork();
 
-		IconManager iconManager = manager.getService(IconManager.class);
-		iconFont = iconManager.getIconFont(17.0f);
-		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		add(createLabelPanel());
-		add(createGraphButtons());
+		createLabels();
+		createGraphButtons();
+		
+		var scrollPane = new JScrollPane(label, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, UIManager.getColor("Separator.foreground")));
+		
+		var layout = new GroupLayout(this);
+		setLayout(layout);
+		layout.setAutoCreateContainerGaps(false);
+		layout.setAutoCreateGaps(!LookAndFeelUtil.isAquaLAF());
+		
+		layout.setHorizontalGroup(layout.createParallelGroup(LEADING, true)
+				.addComponent(title)
+				.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+				.addComponent(info1)
+				.addComponent(info2)
+				.addGroup(layout.createSequentialGroup()
+						.addGap(5, 5, Short.MAX_VALUE)
+						.addGroup(layout.createParallelGroup(CENTER, false)
+								.addComponent(degreeHisto)
+								.addComponent(betweenScatter)
+								.addComponent(closenessClusterScatter)
+						)
+						.addGap(5, 5, Short.MAX_VALUE)
+				)
+				.addComponent(degreeHisto)
+				.addComponent(betweenScatter)
+				.addComponent(closenessClusterScatter)
+		);
+		layout.setVerticalGroup(layout.createSequentialGroup()
+				.addContainerGap()
+				.addComponent(title)
+				.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+				.addComponent(info1)
+				.addComponent(info2)
+				.addPreferredGap(ComponentPlacement.UNRELATED)
+				.addComponent(degreeHisto)
+				.addComponent(betweenScatter)
+				.addComponent(closenessClusterScatter)
+				.addContainerGap()
+		);
+		
 		revalidate();
 		repaint();
 	}
@@ -108,10 +151,9 @@ public class ResultsPanel extends JPanel
 		
 	}
 
-	private Map<String, Object> jsonToMap(String json)
-	{
+	private Map<String, Object> jsonToMap(String json) {
 		String[] lines = json.split("\n");
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		
 		for (String line : lines)
 		{
@@ -129,9 +171,7 @@ public class ResultsPanel extends JPanel
 		return map;
 	}
 	
-	private String clean(String in)
-	{
-		
+	private String clean(String in) {
 		String trimmed = in.trim();
 		if (trimmed.charAt(0) == '"')
 			trimmed = trimmed.substring(1);
@@ -148,6 +188,7 @@ public class ResultsPanel extends JPanel
 	    }
 	    catch( NumberFormatException e ) {	        return false;	    }
 	}
+	
 	private boolean isInteger( String input ) {
 	    try {
 	    	Integer.parseInt( input );	        return true;
@@ -158,65 +199,49 @@ public class ResultsPanel extends JPanel
 	//-----------------------------------------------
 	@Override	public Component getComponent() {		return this;	}
 	@Override	public CytoPanelName getCytoPanelName() {		return CytoPanelName.EAST;	}
-	@Override	public Icon getIcon() {		return null;	}
+
+	@Override
+	public Icon getIcon() {
+		if (icon == null)
+			icon = new TextIcon(IconUtil.LOGO, IconUtil.getIconFont(15.0f), 16, 16);
+
+		return icon;
+	}
+	
 	@Override	public String getTitle() {		return "Analyzer";	}
 
-	static String INTRO = "Summary statistics of the network.  \nNode specific statistics are found in the node table,\nand Edge Betweenness is added to the edge table.";
 	///-----------------------------------------------
-	private JPanel createLabelPanel() {
-		JPanel labelPanel = new JPanel();
-		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.PAGE_AXIS));
-		intro = new JTextArea();
-		intro.setFont(new Font("Serif", Font.BOLD, 12));
-		intro.setOpaque(false);
-		intro.setVisible(false);
-		intro.setText(INTRO);
-		intro.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-		intro.setMaximumSize(new Dimension(300, 54));
-		label = new JTextArea();
-		labelPanel.add(intro);
-		label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		labelPanel.add(label);
-		label.setEditable(false);
-		labelPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
-		return labelPanel;
-	}
-	private JPanel createGraphButtons() {
-		JPanel labelPanel = new JPanel();
-		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.PAGE_AXIS));
+	private void createLabels() {
+		title = new JLabel("Summary Statistics of the Network:");
+		title.setVisible(false);
+		title.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		
+		info1 = new JLabel("- Node specific statistics are found in the Node Table");
+		info1.setVisible(false);
+		info1.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+		
+		info2 = new JLabel("- Edge Betweenness is added to the Edge Table");
+		info2.setVisible(false);
+		info2.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+		
+		label = new JTextArea();
+		label.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		label.setEditable(false);
+		
+		LookAndFeelUtil.makeSmall(info1, info2);
+	}
+	
+	private void createGraphButtons() {
 		degreeHisto = new JButton("Show Node Degree Distribution");
 		betweenScatter = new JButton("Show Betweenness by Degree");
-		closenessClusterScatter = new JButton("Show Closeness Graph");
+		closenessClusterScatter = new JButton("Show Closeness");
 		enableButtons(false);
+		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter, closenessClusterScatter);
 		
-//		degreeHisto.addActionListener(new MouseE));
-		degreeHisto.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) {     manager.makeDegreeHisto();  } } );		
-		betweenScatter.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) {     manager.makeBetweenScatter();  } } );		
-		closenessClusterScatter.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) {     manager.makeClosenessClusterScatter();  } } );		
-		JPanel line1 = new JPanel(); 
-		line1.setLayout(new BoxLayout(line1, BoxLayout.LINE_AXIS));
-		line1.add(degreeHisto);
-		line1.add(Box.createHorizontalGlue());
-		labelPanel.add(line1); 
-		
-		JPanel line2 = new JPanel(); 
-		line2.setLayout(new BoxLayout(line2, BoxLayout.LINE_AXIS));
-		line2.add(betweenScatter);
-		line2.add(Box.createHorizontalGlue());
-		labelPanel.add(line2);
-		
-		JPanel line3 = new JPanel(); 
-		line3.setLayout(new BoxLayout(line3, BoxLayout.LINE_AXIS));
-		line3.add(closenessClusterScatter);
-		line3.add(Box.createHorizontalGlue());
-		labelPanel.add(line3);
-		return labelPanel;
+		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
+		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
+		closenessClusterScatter.addActionListener(evt -> manager.makeClosenessClusterScatter());
 	}
-
 
 	public void actionPerformed(ActionEvent event) {
 		String command = event.getActionCommand();
@@ -227,8 +252,9 @@ public class ResultsPanel extends JPanel
 
 	public void setResultString(String out) {
 		label.setText(out);
-		intro.setVisible(true);
+		title.setVisible(true);
+		info1.setVisible(true);
+		info2.setVisible(true);
 		enableButtons(true);
-		
 	}
 }
