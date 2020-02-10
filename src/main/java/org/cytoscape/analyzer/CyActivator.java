@@ -43,13 +43,13 @@ import static org.cytoscape.work.ServiceProperties.TITLE;
 import java.util.Properties;
 
 import org.cytoscape.analyzer.tasks.AnalyzeNetworkTaskFactory;
+import org.cytoscape.analyzer.tasks.RemoveDupEdgesAction;
+import org.cytoscape.analyzer.tasks.RemoveSelfLoopsAction;
 import org.cytoscape.analyzer.tasks.VersionTaskFactory;
-import org.cytoscape.application.events.SetCurrentNetworkListener;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.application.swing.CytoPanel;
-import org.cytoscape.application.swing.CytoPanelComponent;
-import org.cytoscape.application.swing.CytoPanelName;
-import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.NetworkCollectionTaskFactory;
@@ -67,6 +67,8 @@ public class CyActivator extends AbstractCyActivator {
 	public void start(BundleContext bc) {
         final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
         final CySwingApplication desktop = getService(bc, CySwingApplication.class);
+        final CyApplicationManager mgr = getService(bc, CyApplicationManager.class);
+        final CyNetworkManager netmgr = getService(bc, CyNetworkManager.class);
 		final AnalyzerManager manager = new AnalyzerManager(registrar, desktop);		
 
 		Properties props = new Properties();
@@ -91,6 +93,12 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(IN_TOOL_BAR, "false");
 			registerService(bc,analyzeNetworkTaskFactory, TaskFactory.class, props);
 		}
+		
+		RemoveDupEdgesAction remDupEdgesAction = new RemoveDupEdgesAction(mgr,desktop,netmgr);
+		RemoveSelfLoopsAction removeSelfLoopsAction = new RemoveSelfLoopsAction(mgr,desktop,netmgr);
+		registerService(bc,remDupEdgesAction,CyAction.class, new Properties());
+		registerService(bc,removeSelfLoopsAction,CyAction.class, new Properties());
+
 //		{			// adding a second task
 //			props.clear();
 //			props.put(ID, "analyzeDegreeTaskFactory");	
@@ -123,7 +131,7 @@ public class CyActivator extends AbstractCyActivator {
 //			panel.setState(CytoPanelState.DOCK);
 //		}
 
-		{	String version = "4.4.0";			// TODO keep in synch with POM
+		{	String version = "4.4.4";			// TODO keep in synch with POM
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
 			props = new Properties();
