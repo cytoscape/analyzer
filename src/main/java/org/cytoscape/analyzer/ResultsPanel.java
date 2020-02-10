@@ -53,7 +53,7 @@ public class ResultsPanel extends JPanel
 	private JTextArea label;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
-	private JButton closenessClusterScatter;
+//	private JButton closenessClusterScatter;
 
 	private CyNetwork network;
 //	private String enrichmentType = "entireNetwork";
@@ -84,13 +84,13 @@ public class ResultsPanel extends JPanel
 						.addGroup(layout.createParallelGroup(CENTER, false)
 								.addComponent(degreeHisto)
 								.addComponent(betweenScatter)
-								.addComponent(closenessClusterScatter)
+//								.addComponent(closenessClusterScatter)
 						)
 						.addGap(5, 5, Short.MAX_VALUE)
 				)
 				.addComponent(degreeHisto)
 				.addComponent(betweenScatter)
-				.addComponent(closenessClusterScatter)
+//				.addComponent(closenessClusterScatter)
 		);
 		layout.setVerticalGroup(layout.createSequentialGroup()
 				.addContainerGap()
@@ -101,7 +101,7 @@ public class ResultsPanel extends JPanel
 				.addPreferredGap(ComponentPlacement.UNRELATED)
 				.addComponent(degreeHisto)
 				.addComponent(betweenScatter)
-				.addComponent(closenessClusterScatter)
+//				.addComponent(closenessClusterScatter)
 				.addContainerGap()
 		);
 		
@@ -137,7 +137,7 @@ public class ResultsPanel extends JPanel
 	public void enableButtons(boolean b) {
 		degreeHisto.setEnabled(b);;
 		betweenScatter.setEnabled(b);
-		closenessClusterScatter.setEnabled(b);
+//		closenessClusterScatter.setEnabled(b);
 		
 	}
 
@@ -234,13 +234,13 @@ public class ResultsPanel extends JPanel
 	private void createGraphButtons() {
 		degreeHisto = new JButton("Show Node Degree Distribution");
 		betweenScatter = new JButton("Show Betweenness by Degree");
-		closenessClusterScatter = new JButton("Show Closeness");
+//		closenessClusterScatter = new JButton("Show Closeness");
 		enableButtons(false);
-		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter, closenessClusterScatter);
+		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);//, closenessClusterScatter
 		
 		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
 		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
-		closenessClusterScatter.addActionListener(evt -> manager.makeClosenessClusterScatter());
+//		closenessClusterScatter.addActionListener(evt -> manager.makeClosenessClusterScatter());
 	}
 
 	public void actionPerformed(ActionEvent event) {
