@@ -26,6 +26,7 @@ import java.util.Arrays;
  * #L%
  */
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.cytoscape.analyzer.util.NetworkInterpretation;
 import org.cytoscape.analyzer.util.NetworkStatus;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
+import org.cytoscape.command.StringToModel;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
@@ -51,66 +53,78 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.presentation.property.ArrowShapeVisualProperty;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.values.ArrowShape;
+import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.TunableValidator;
 import org.cytoscape.work.json.JSONResult;
 
-public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements TunableValidator, ObservableTask {
+public class AnalyzeNetworkTask extends AbstractTask implements TunableValidator, ObservableTask {
+
+	@Tunable(description = "Network to analyze?", context="nogui", 
+	         exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING,
+	         longDescription=StringToModel.CY_NETWORK_LONG_DESCRIPTION)
+	public String network = null;
 
 	@Tunable(description = "Analyze as Directed Graph?")
 	public Boolean directed = false;
 	
-//	@Tunable(description = "Analyze only selected nodes?")
+	@Tunable(description = "Analyze only selected nodes?", context="nogui")
 	public Boolean selectedOnly = false;
 	
 	final CyServiceRegistrar registrar;
 	final CySwingApplication desktop;
+	final CyApplicationManager appMgr;
 	private NetworkAnalyzer analyzer;
 	final AnalyzerManager manager;
-	
-	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, CyServiceRegistrar reg, CySwingApplication app, AnalyzerManager mgr) {
-		super(networks);
+	final StringToModel stringToModel;
+	final Collection<CyNetwork> networks;
+
+	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, 
+	                          CyServiceRegistrar reg, CySwingApplication app, AnalyzerManager mgr) {
+		this.networks = networks;
 		desktop = app;
 		registrar = reg;
 		manager = mgr;	
-		directed = anyDirected(networks);   // this relies on the style defined, so is not error-free
-	}
+		appMgr = reg.getService(CyApplicationManager.class);
+		stringToModel = reg.getService(StringToModel.class);
 
-	private Boolean anyDirected(Collection<CyNetwork> networks) {
-		
-		for (CyNetwork net : networks)
-			if (isDireceted(net)) return true;
-		return false;
-	}
-
-		// guess if the network is directed, based on it having a arrow shape defined on the target
-	private boolean isDireceted(CyNetwork net) {
-		CyNetworkView view = registrar.getService(CyApplicationManager.class).getCurrentNetworkView();
-		ArrowShape arrow = (ArrowShape) view.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
-		return (arrow != null && arrow != ArrowShapeVisualProperty.NONE);
+		if (networks != null)
+			directed = anyDirected(networks);   // this relies on the style defined, so is not error-free
 	}
 
 	@Override
 	public void run(TaskMonitor taskMonitor) throws Exception {
 		double processed = 0.0d;
-		final double increment= 1.0d/networks.size();
-		
+
+		Collection<CyNetwork> nets = networks;
+		if (nets == null) {
+			nets = new ArrayList<CyNetwork>();
+
+			if (network == null)
+				nets.add(appMgr.getCurrentNetwork());
+			else {
+				nets.add(stringToModel.getNetwork(network));
+			}
+		}
+
+		final double increment= 1.0d/nets.size();
+
 		taskMonitor.setProgress(processed);
 		taskMonitor.setTitle("Analyzing Networks");
 
-		for (final CyNetwork network : networks) {
+		for (final CyNetwork network : nets) {
 //			System.out.println((network == null ? "null" : network.getSUID()));
 			taskMonitor.setStatusMessage("Analyzing Network: " + network.getRow(network).get(CyNetwork.NAME, String.class));
-			
+
 			final Set<CyNode> selectedNodes = new HashSet<CyNode>();
 			Collection<CyRow> matched;
-			if(selectedOnly) 
+			if(selectedOnly)
 				matched = network.getDefaultNodeTable().getMatchingRows(CyNetwork.SELECTED, true);
-			else 	
+			else
 				matched = network.getDefaultNodeTable().getAllRows();
-			
+
 			for(CyRow row : matched)
 				selectedNodes.add(network.getNode(row.get(CyIdentifiable.SUID, Long.class)));
 //			System.out.println(("analyze " + network.getSUID()));
@@ -152,12 +166,25 @@ public class AnalyzeNetworkTask extends AbstractNetworkCollectionTask implements
 		return null;
 	}
 
+	private Boolean anyDirected(Collection<CyNetwork> networks) {
+		for (CyNetwork net : networks)
+			if (isDirected(net)) return true;
+		return false;
+	}
+
+		// guess if the network is directed, based on it having a arrow shape defined on the target
+	private boolean isDirected(CyNetwork net) {
+		CyNetworkView view = registrar.getService(CyApplicationManager.class).getCurrentNetworkView();
+		ArrowShape arrow = (ArrowShape) view.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+		return (arrow != null && arrow != ArrowShapeVisualProperty.NONE);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <R> R getResults(Class<? extends R> type) {
 	    String response = analyzer.getStats().jsonOutput();
 		if (type.equals(String.class)) {
-      return (R)response;
+      return (R)analyzer.getStats().toString();
     } else if (type.equals(JSONResult.class)) {
 			JSONResult res = () -> { return analyzer.getStats().jsonOutput(); };
 			return (R)res;

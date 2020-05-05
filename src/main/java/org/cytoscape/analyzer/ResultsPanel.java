@@ -5,6 +5,7 @@ import static javax.swing.GroupLayout.DEFAULT_SIZE;
 import static javax.swing.GroupLayout.Alignment.CENTER;
 import static javax.swing.GroupLayout.Alignment.LEADING;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,6 +24,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager;
 
 import org.cytoscape.analyzer.util.IconUtil;
+import org.cytoscape.analyzer.util.JSONUtils;
 import org.cytoscape.analyzer.util.NetworkStats;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkEvent;
@@ -50,13 +52,11 @@ public class ResultsPanel extends JPanel
 	private JLabel title;
 	private JLabel info1;
 	private JLabel info2;
-	private JTextArea label;
+	private JLabel label;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
-//	private JButton closenessClusterScatter;
 
 	private CyNetwork network;
-//	private String enrichmentType = "entireNetwork";
 
 	public ResultsPanel(final AnalyzerManager manager) {
 		this.manager = manager;
@@ -68,6 +68,7 @@ public class ResultsPanel extends JPanel
 		
 		var scrollPane = new JScrollPane(label, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, UIManager.getColor("Separator.foreground")));
+		scrollPane.setBackground(getBackground());
 		
 		var layout = new GroupLayout(this);
 		setLayout(layout);
@@ -145,55 +146,10 @@ public class ResultsPanel extends JPanel
 	private String parseJson(String stats) {
 		if (stats == null) return null;
 		if (!stats.startsWith("{")) return stats;
-		Map<String, Object> map = jsonToMap(stats);
-		stats = NetworkStats.formattedOutput(map);
-		return stats;
+		// Map<String, Object> map = JSONUtils.jsonToMap(stats);
+		NetworkStats st = new NetworkStats(stats);
+		return st.formattedOutput();
 		
-	}
-
-	private Map<String, Object> jsonToMap(String json) {
-		String[] lines = json.split("\n");
-		Map<String, Object> map = new HashMap<>();
-		
-		for (String line : lines)
-		{
-			if (line.trim().length() == 0) continue;
-			String[] tokens = line.split(":");
-			if (tokens.length < 2) continue;
-			String key = clean(tokens[0]);
-			Object val = clean(tokens[1]);
-			String s = val.toString();
-			if (isDouble(s) && !isInteger(s))
-				val = Double.parseDouble(val.toString());
-				
-			map.put(key,val);
-		}
-		return map;
-	}
-	
-	private String clean(String in) {
-		String trimmed = in.trim();
-		if (trimmed.charAt(0) == '"')
-			trimmed = trimmed.substring(1);
-		if (trimmed.endsWith(","))
-			trimmed = trimmed.substring(0, trimmed.length()-1);
-		if (trimmed.endsWith("\""))
-			trimmed = trimmed.substring(0, trimmed.length()-1);
-		return trimmed;
-	}
-
-	private boolean isDouble( String input ) {
-	    try {
-	    	Double.parseDouble( input );	        return true;
-	    }
-	    catch( NumberFormatException e ) {	        return false;	    }
-	}
-	
-	private boolean isInteger( String input ) {
-	    try {
-	    	Integer.parseInt( input );	        return true;
-	    }
-	    catch( NumberFormatException e ) {      return false;    }
 	}
 
 	//-----------------------------------------------
@@ -224,9 +180,10 @@ public class ResultsPanel extends JPanel
 		info2.setVisible(false);
 		info2.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		
-		label = new JTextArea();
+		label = new JLabel();
 		label.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		label.setEditable(false);
+		label.setBackground(getBackground());
+		// label.setEditable(false);
 		
 		LookAndFeelUtil.makeSmall(info1, info2);
 	}
@@ -252,6 +209,7 @@ public class ResultsPanel extends JPanel
 
 	public void setResultString(String out) {
 		label.setText(out);
+		label.setOpaque(true);
 		title.setVisible(true);
 		info1.setVisible(true);
 		info2.setVisible(true);

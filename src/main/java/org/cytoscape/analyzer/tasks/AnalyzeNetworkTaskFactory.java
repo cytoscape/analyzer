@@ -59,11 +59,11 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 	@Override
 	public TaskIterator createTaskIterator() {
 		CyApplicationManager appMgr = reg.getService(CyApplicationManager.class);
-		CyNetwork current = appMgr.getCurrentNetwork();
-			
-		 List<CyNetwork> networks = new ArrayList<CyNetwork>();
-		 networks.add(current);
-		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app, mgr));
+		// CyNetwork current = appMgr.getCurrentNetwork();
+
+		// List<CyNetwork> networks = new ArrayList<CyNetwork>();
+		// networks.add(current);
+		return new TaskIterator(new AnalyzeNetworkTask(null, reg, app, mgr));
 
 	}
 	@Override

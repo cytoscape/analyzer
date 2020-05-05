@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.cytoscape.analyzer.NetworkAnalyzer;
+import org.cytoscape.analyzer.util.JSONUtils;
 import org.cytoscape.model.CyNetwork;
 
 /**
@@ -118,6 +119,14 @@ public class NetworkStats {
 
 	/**
 	 * Initializes a new instance of <code>NetworkStats</code>.
+	 */
+	public NetworkStats(String jsonMap) {
+		Map<String, Object> params = JSONUtils.jsonToMap(jsonMap);
+		network = null;
+	}
+
+	/**
+	 * Initializes a new instance of <code>NetworkStats</code>.
 	 *
 	 * @param aNetwork Network, on which parameters will be stored.
 	 */
@@ -164,8 +173,72 @@ public class NetworkStats {
 		out.append("\n}\n");
 		return out.toString();
 	}
+
+	/**
+	 * Output the most useful network statistics
+	 */
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		addString(builder, "Network: ", "networkTitle");
+		addString(builder, "Number of nodes: ", "nodeCount");
+		addString(builder, "Number of edges: ", "edgeCount");
+		addInteger(builder, "Connected components: ", "ncc");
+		addInteger(builder, "Diameter: ", "diameter");
+		addDouble(builder, "Density: ", "density");
+		addDouble(builder, "Heterogeneity: ", "heterogeneity");
+
+		return builder.toString();
+	}
+
+	void addString(StringBuilder builder, String label, String key) {
+		String val = params.get(key).toString();
+		builder.append(label);
+		builder.append(val+"\n");
+		return;
+	}
 	
-	public static String formattedOutput( Map<String, Object> parmMap)
+	void addInteger(StringBuilder builder, String label, String key) {
+		Integer val = (Integer)params.get(key);
+		builder.append(label);
+		builder.append(String.format("%3d\n", val));
+		return;
+	}
+	
+	void addDouble(StringBuilder builder, String label, String key) {
+		Double val = (Double)params.get(key);
+		builder.append(label);
+		builder.append(String.format("%8.3f\n", val));
+		return;
+	}
+
+	public String htmlOutput() {
+		StringBuilder out = new StringBuilder();	
+		out.append("<html><body>");
+		out.append("<p style=\"text-align: center\"><b>"+params.get("networkTitle")+"</b></p>");
+		out.append("<br/><br/>");
+		out.append("<div height='100%'>");
+		out.append("<table width='100%'>");
+		for (String key : keys)
+		{
+			if (key == null || key.trim().length() == 0 || key.equals("networkTitle"))
+				continue;
+			else
+			{
+				Object val = params.get(key);
+				String s = Msgs.get(key);
+				if (val instanceof String)
+					out.append(String.format("<tr><td><b>%s</b></td><td align='right'>%s</td></tr>",s,val));
+				else if (val instanceof Double )
+					out.append(String.format("<tr><td><b>%s</b></td><td align='right'>%8.3f</td></tr>", s ,val));
+				else if (val instanceof Integer )
+					out.append(String.format("<tr><td><b>%s</b></td><td align='right'>%3d</td></tr>", s ,val));
+			}
+		}
+		out.append("</div></table></body></html>");
+		return out.toString();
+	}
+
+	public String formattedOutput()
 	{
 		StringBuilder out = new StringBuilder();	
 		for (String key : keys)
@@ -174,7 +247,7 @@ public class NetworkStats {
 				out.append("\n");
 			else
 			{
-				Object val = parmMap.get(key);
+				Object val = params.get(key);
 				String s = Msgs.get(key);
 				if (s != null) 
 					key = s;
@@ -355,6 +428,21 @@ public class NetworkStats {
 			}
 		}
 		return computed;
+	}
+
+	/**
+	 * Copies the missing statistics from one NetworkStats object to this object
+	 */
+	public void copyStats(NetworkStats other) {
+		Map<String, Object> otherParams = other.getParameters();
+		for (String key: simpleParams) {
+			if (!params.containsKey(key) && otherParams.containsKey(key))
+				params.put(key, otherParams.get(key));
+		}
+		for (String key: complexParams) {
+			if (!params.containsKey(key) && otherParams.containsKey(key))
+				params.put(key, otherParams.get(key));
+		}
 	}
 
 }

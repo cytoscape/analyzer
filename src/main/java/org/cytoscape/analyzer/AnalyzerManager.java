@@ -20,7 +20,7 @@ import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 
 
-public class AnalyzerManager implements SessionLoadedListener{
+public class AnalyzerManager implements SessionLoadedListener {
 
 	final private TaskManager<?, ?> taskManager;
 	final private CyServiceRegistrar registrar; 

@@ -50,7 +50,7 @@ import org.cytoscape.model.CyRow;
  * 
  * @author Yassen Assenov
  */
-public class ConnectedComponentInfo {
+public class ConnectedComponentInfo implements Comparable<ConnectedComponentInfo> {
 
 	/**
 	 * Initializes a new instance of <code>CCInfo</code>.
@@ -108,9 +108,9 @@ boolean isPaired = false;
 	 * Flag indicating if node(edge) betweenness and stress should be computed. It is set to false if the
 	 * number of shortest paths exceeds the maximum long value.
 	 */
-	protected boolean computeNB;
+	// protected boolean computeNB;
 
-	protected int nodeCount;
+	// protected int nodeCount;
 	
 	// Starting from here are variables initialized and used in computeAll()
 	protected int networkEdgeCount;
@@ -330,7 +330,8 @@ boolean isPaired = false;
 			row.set( Msgs.getAttr("clc"), closeness);
 
 			// CyNode and edge betweenness calculation
-			UndirNetworkAnalyzer.computeNBandEB(nodeID, numNodes, edges, edgeOffsets, edgeIDs, localNodeBetweenness, localStress, localEdgeBetweenness);
+			UndirNetworkAnalyzer.computeNBandEB(nodeID, numNodes, edges, edgeOffsets, edgeIDs, 
+			                                    localNodeBetweenness, localStress, localEdgeBetweenness);
 
 			if (parent.cancelled)
 				break;
@@ -570,11 +571,11 @@ boolean isPaired = false;
 		if (params.connectivityAccum != null) {
 			final double meanConnectivity = params.connectivityAccum.getAverage();
 			stats.set("avNeighbors", meanConnectivity);
-			final double density = meanConnectivity / (nodeCount - 1);
-			stats.set("density", meanConnectivity / (nodeCount - 1));
-			stats.set("centralization", (nodeCount / ((double) nodeCount - 2))
-					* (maxConnectivity / ((double) nodeCount - 1) - density));
-			final double nom = params.sqConnectivityAccum.getSum() * nodeCount;
+			final double density = meanConnectivity / (numNodes - 1);
+			stats.set("density", meanConnectivity / (numNodes - 1));
+			stats.set("centralization", (numNodes / ((double) numNodes - 2))
+					* (maxConnectivity / ((double) numNodes - 1) - density));
+			final double nom = params.sqConnectivityAccum.getSum() * numNodes;
 			final double denom = params.connectivityAccum.getSum()
 					* params.connectivityAccum.getSum();
 			stats.set("heterogeneity", Math.sqrt(nom / denom - 1));
@@ -586,7 +587,7 @@ boolean isPaired = false;
 	// Save C(k) in the statistics instance
 		if (CCps.size() > 0) {
 			Point2D.Double[] averages = new Point2D.Double[CCps.size()];
-			double cc = parent.accumulateCCs(CCps, averages) / nodeCount;
+			double cc = parent.accumulateCCs(CCps, averages) / numNodes;
 			stats.set("cc", cc);
 			if (averages.length > 1) 
 				stats.set("cksDist", new Points2D(averages));
@@ -618,7 +619,7 @@ boolean isPaired = false;
 			if (params.diameter > 1) 
 				stats.set("splDist", new LongHistogram(sPathLengths, 1, params.diameter));
 			int largestCommN = 0;
-			for (int i = 1; i < nodeCount; ++i) {
+			for (int i = 1; i < numNodes; ++i) {
 				if (sharedNeighborsHist[i] != 0) {
 					sharedNeighborsHist[i] /= 2;
 					largestCommN = i;
@@ -639,9 +640,15 @@ boolean isPaired = false;
 		if (NCps.size() > 1) 										
 			stats.set("neighborConn", new Points2D(getAverages(NCps)));		// Save neighborhood connectivity in the statistics instance
 	
-		if (computeNB) 						
+		// if (computeNB) 						
 			stats.set("stressDist", stressDist.createPoints2D());			// Save stress distribution in the statistics instance
 		
 	}
 
+	@Override
+	public int compareTo(ConnectedComponentInfo o) {
+		return Integer.valueOf(getSize()).compareTo(Integer.valueOf(o.getSize()));
+	}
+
+	public NetworkStats getStats() { return stats; }
 }

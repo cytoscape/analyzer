@@ -27,8 +27,11 @@ package org.cytoscape.analyzer;
  */
 
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.cytoscape.analyzer.util.ConnectedComponentInfo;
@@ -42,6 +45,7 @@ import org.cytoscape.model.CyNode;
  * @author Yassen Assenov
  */
 public class ConnComponentAnalyzer {
+	List<ConnectedComponentInfo> components = null;
 
 	/**
 	 * Initializes a new instance of <code>ConnComponentAnalyzer</code>.
@@ -52,6 +56,7 @@ public class ConnComponentAnalyzer {
 	{		
 		network = aNetwork;	
 		analyzer = analz;
+		components = null;
 	}
 	
 	NetworkAnalyzer analyzer;
@@ -88,20 +93,22 @@ public class ConnComponentAnalyzer {
 	 * @return Set of all components in the analyzed network ({@link #getNetwork()}); empty set if
 	 *         the analyzed network is empty.
 	 */
-	public Set<ConnectedComponentInfo> findComponents() {
+	public List<ConnectedComponentInfo> findComponents() {
 		int untravCount = network.getNodeCount();
 
 		Set<CyNode> traversed = new HashSet<CyNode>(untravCount);
-		Set<ConnectedComponentInfo> components = new HashSet<ConnectedComponentInfo>();
+		Set<ConnectedComponentInfo> ccis = new HashSet<ConnectedComponentInfo>();
 
 		for ( CyNode node : network.getNodeList()) {
 			if (!traversed.contains(node)) {
 				// Unmarked node reached - create new conn. component
 				final int ccSize = traverseReachable(node, traversed);
 				untravCount -= ccSize;
-				components.add(new ConnectedComponentInfo(analyzer, ccSize, node, false));
+				ccis.add(new ConnectedComponentInfo(analyzer, ccSize, node, false));
 			}
 		}
+		components = new ArrayList<>(ccis);
+		Collections.sort(components);
 		return components;
 	}
 
@@ -118,12 +125,10 @@ public class ConnComponentAnalyzer {
 	 *         in the network contains more nodes than C.
 	 */
 	public ConnectedComponentInfo findLargestComponent() {
-		ConnectedComponentInfo largest = new ConnectedComponentInfo(analyzer, 0, null, false);
-		final Set<ConnectedComponentInfo> comps = findComponents();
-		for (ConnectedComponentInfo current : comps) 
-			if (current.getSize() > largest.getSize()) 
-				largest = current;
-		return largest;
+		if (components == null)
+			findComponents();
+
+		return components.get(components.size()-1);
 	}
 
 	private CyNetwork network;

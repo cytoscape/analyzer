@@ -131,7 +131,8 @@ public class CyActivator extends AbstractCyActivator {
 //			panel.setState(CytoPanelState.DOCK);
 //		}
 
-		{	String version = "4.4.5";			// TODO keep in synch with POM
+		{	
+			String version = bc.getBundle().getVersion().toString();
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
 			props = new Properties();

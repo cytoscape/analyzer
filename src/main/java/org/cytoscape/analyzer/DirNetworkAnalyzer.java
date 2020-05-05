@@ -123,8 +123,9 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 
 		// Compute number of connected components
 		final ConnComponentAnalyzer analyzer = new ConnComponentAnalyzer(this, network);
-		Set<ConnectedComponentInfo> components = analyzer.findComponents();
+		List<ConnectedComponentInfo> components = analyzer.findComponents();
 		final int connectedComponentsCount = components.size();
+		final ConnectedComponentInfo largestComponent = analyzer.findLargestComponent();
 
 		if (NetworkAnalyzer.verbose) 	System.out.println(connectedComponentsCount + " components");
 		// Compute node and edge betweenness
