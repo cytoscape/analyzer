@@ -54,8 +54,9 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 		long time = System.currentTimeMillis();
 		analysisStarting();
 		ConnComponentAnalyzer cca = new ConnComponentAnalyzer(this,network);						// Compute number of connected components
-		Set<ConnectedComponentInfo> components = cca.findComponents();
+		List<ConnectedComponentInfo> components = cca.findComponents();
 		int connectedComponentCount = components.size();
+		ConnectedComponentInfo largest = cca.findLargestComponent();
 		stats.set("ncc", connectedComponentCount);
 
 		for (ConnectedComponentInfo aCompInfo : components) 
@@ -63,6 +64,9 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 			aCompInfo.analyze(network, cca);
 			progress++;
 		}
+
+		// OK, now copy over the statistics from our largest connected component
+		stats.copyStats(largest.getStats());
 		analysisFinished();
 		time = System.currentTimeMillis() - time;
 		stats.set("time", time / 1000.0);
@@ -117,7 +121,8 @@ public class UndirNetworkAnalyzer extends NetworkAnalyzer
 	 * @return Data on the shortest path lengths from the current node to all other reachable nodes
 	 *         in the network.
 	 */
-	public static PathLengthData computeSPandSN(int node, int numNodes, int[] edges, int[] edgeOffsets, long[] outSharedNeighborsHist, long[] outSPathLengths) 
+	public static PathLengthData computeSPandSN(int node, int numNodes, int[] edges, 
+	                                            int[] edgeOffsets, long[] outSharedNeighborsHist, long[] outSPathLengths) 
 	{
 		boolean[] visited = new boolean[numNodes];
 		visited[node] = true;

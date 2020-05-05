@@ -104,21 +104,20 @@ public abstract class NetworkAnalyzer {
 		hiddenTable.getRow(network.getSUID()).set(columnName, json);
 		
 		
-		String out = NetworkStats.formattedOutput(stats.getParameters());
+		// String out = stats.formattedOutput();
+		String out = stats.htmlOutput();
 		CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
 		int nPanels = panel.getCytoPanelComponentCount();
-		if (nPanels > 0)
-		{
-			Component comp = panel.getComponentAt(0);
+		for (int c = 0; c < nPanels; c++) {
+			Component comp = panel.getComponentAt(c);
 			if (comp instanceof ResultsPanel)
 			{
 				ResultsPanel results = (ResultsPanel) comp;
 				results.setResultString(out);
+				panel.setSelectedIndex(c);
 			}
 		}
-			
-//		stats.dump();
 	}
 
 	/**
