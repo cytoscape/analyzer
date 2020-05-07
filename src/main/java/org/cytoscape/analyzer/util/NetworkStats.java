@@ -121,7 +121,7 @@ public class NetworkStats {
 	 * Initializes a new instance of <code>NetworkStats</code>.
 	 */
 	public NetworkStats(String jsonMap) {
-		Map<String, Object> params = JSONUtils.jsonToMap(jsonMap);
+		params = JSONUtils.jsonToMap(jsonMap);
 		network = null;
 	}
 
@@ -189,6 +189,8 @@ public class NetworkStats {
 
 		return builder.toString();
 	}
+
+	public String[] getKeys() { return keys; }
 
 	void addString(StringBuilder builder, String label, String key) {
 		String val = params.get(key).toString();
