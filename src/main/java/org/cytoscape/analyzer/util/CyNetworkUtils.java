@@ -44,6 +44,8 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableUtil;
 
+import org.cytoscape.analyzer.util.AttributeSetup;
+
 
 /**
  * Utility class providing network functionality absent or deprecated in {@link org.cytoscape.model.CyNetwork} .
@@ -400,6 +402,10 @@ public  class CyNetworkUtils {
 	 */
 	public static int removeDuplEdges(CyNetwork aNetwork, boolean aIgnoreDir, boolean aCreateEdgeAttr) 
 	{
+		// Create the attribute if we're supposed to add edge data
+		if (aCreateEdgeAttr)
+			AttributeSetup.createEdgeDuplicateAttribute(aNetwork.getDefaultEdgeTable());
+
 		// Give each node an Int32 ID, so edge IDs can be generated quickly
 		HashMap<CyNode, Integer> node2id = new HashMap<>();
 		for (CyNode n : aNetwork.getNodeList())

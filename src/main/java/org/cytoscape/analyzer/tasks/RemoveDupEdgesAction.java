@@ -37,6 +37,7 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Action handler for the menu item &quot;Remove Self-loops&quot;.
  * 
@@ -87,7 +88,7 @@ public class RemoveDupEdgesAction extends NetAnalyzerAction {
 				final int size = networks.length;
 				int[] removedLoops = new int[size];
 				String[] networkNames = new String[size];
-				
+
 				for (int i = 0; i < size; ++i) {
 					final CyNetwork currentNet = networks[i];
 					networkNames[i] = currentNet.getRow(currentNet).get("name",String.class);
@@ -104,7 +105,9 @@ public class RemoveDupEdgesAction extends NetAnalyzerAction {
 	}
 
 	private String constructReport(int[] removedLoops, String s, String[] networkNames) {
-		// TODO Auto-generated method stub
-		return null;
+		String report = "";
+		for (int index = 0; index < removedLoops.length; index++)
+			report += removedLoops[index]+s+networkNames[index]+"\n";
+		return report;
 	}
 }
