@@ -19,7 +19,7 @@
 	<groupId>org.cytoscape</groupId>
 	<artifactId>analyzer</artifactId>
 	<packaging>bundle</packaging>
-	<name>Network Analyzer</name>
+	<name>NetworkAnalyzer</name>
 	<version>4.4.6</version>	<!-- TODO keep in synch with CyActivator.122-->
 
 	<scm>
