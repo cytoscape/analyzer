@@ -45,6 +45,8 @@ import java.util.Properties;
 import org.cytoscape.analyzer.tasks.AnalyzeNetworkTaskFactory;
 import org.cytoscape.analyzer.tasks.RemoveDupEdgesAction;
 import org.cytoscape.analyzer.tasks.RemoveSelfLoopsAction;
+import org.cytoscape.analyzer.tasks.RemoveDupEdgesTaskFactory;
+import org.cytoscape.analyzer.tasks.RemoveSelfLoopsTaskFactory;
 import org.cytoscape.analyzer.tasks.VersionTaskFactory;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CyAction;
@@ -93,6 +95,28 @@ public class CyActivator extends AbstractCyActivator {
 			props.put(IN_TOOL_BAR, "false");
 			registerService(bc,analyzeNetworkTaskFactory, TaskFactory.class, props);
 		}
+
+    {
+      props.clear();
+      props.put(COMMAND_NAMESPACE, "analyzer");
+			props.put(COMMAND, "remove self loops");
+			props.put(COMMAND_DESCRIPTION,  "Remove any self loops in the network");
+			props.put(COMMAND_LONG_DESCRIPTION, "Removes node self loops");
+			props.put(COMMAND_SUPPORTS_JSON, "true");
+			RemoveSelfLoopsTaskFactory factory = new RemoveSelfLoopsTaskFactory();
+			registerService(bc,factory, TaskFactory.class, props);
+    }
+
+    {
+      props.clear();
+      props.put(COMMAND_NAMESPACE, "analyzer");
+			props.put(COMMAND, "remove duplicated edges");
+			props.put(COMMAND_DESCRIPTION,  "Remove any duplcated edges in the network");
+			props.put(COMMAND_LONG_DESCRIPTION, "Removes duplcated edges");
+			props.put(COMMAND_SUPPORTS_JSON, "true");
+			RemoveDupEdgesTaskFactory factory = new RemoveDupEdgesTaskFactory();
+			registerService(bc,factory, TaskFactory.class, props);
+    }
 		
 		RemoveDupEdgesAction remDupEdgesAction = new RemoveDupEdgesAction(mgr,desktop,netmgr);
 		RemoveSelfLoopsAction removeSelfLoopsAction = new RemoveSelfLoopsAction(mgr,desktop,netmgr);
