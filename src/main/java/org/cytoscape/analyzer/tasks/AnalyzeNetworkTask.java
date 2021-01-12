@@ -11,16 +11,16 @@ import java.util.Arrays;
  * Copyright (C) 2013 The Cytoscape Consortium
  * %%
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
+ *
+ * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
@@ -62,17 +62,17 @@ import org.cytoscape.work.json.JSONResult;
 
 public class AnalyzeNetworkTask extends AbstractTask implements TunableValidator, ObservableTask {
 
-	@Tunable(description = "Network to analyze?", context="nogui", 
+	@Tunable(description = "Network to analyze?", context="nogui",
 	         exampleStringValue=StringToModel.CY_NETWORK_EXAMPLE_STRING,
 	         longDescription=StringToModel.CY_NETWORK_LONG_DESCRIPTION)
 	public String network = null;
 
 	@Tunable(description = "Analyze as Directed Graph?")
 	public Boolean directed = false;
-	
+
 	@Tunable(description = "Analyze only selected nodes?", context="nogui")
 	public Boolean selectedOnly = false;
-	
+
 	final CyServiceRegistrar registrar;
 	final CySwingApplication desktop;
 	final CyApplicationManager appMgr;
@@ -81,12 +81,12 @@ public class AnalyzeNetworkTask extends AbstractTask implements TunableValidator
 	final StringToModel stringToModel;
 	final Collection<CyNetwork> networks;
 
-	public AnalyzeNetworkTask(final Collection<CyNetwork> networks, 
+	public AnalyzeNetworkTask(final Collection<CyNetwork> networks,
 	                          CyServiceRegistrar reg, CySwingApplication app, AnalyzerManager mgr) {
 		this.networks = networks;
 		desktop = app;
 		registrar = reg;
-		manager = mgr;	
+		manager = mgr;
 		appMgr = reg.getService(CyApplicationManager.class);
 		stringToModel = reg.getService(StringToModel.class);
 
@@ -137,11 +137,13 @@ public class AnalyzeNetworkTask extends AbstractTask implements TunableValidator
 	private void analyze(final CyNetwork network, final Set<CyNode> nodes) {
 //		System.out.println("A:" + (network == null ? "null" : network.getSUID()));
 //		System.out.println("B:" + ( nodes == null ? 0 : nodes.size()));
-		
+
 		final NetworkInspection status = CyNetworkUtils.inspectNetwork(network);
 		final NetworkInterpretation interpr = interpretNetwork(status);
-	
+
 //		System.out.println((network == null ? "null" : network.getSUID()) + " " + nodes == null ? 0 : nodes.size());
+		if(interpr == null && directed)
+			throw new NullPointerException("Analyze as direct graph is not applicable. Try to analzye as undirected graph");
 		if(interpr == null)
 			throw new NullPointerException("NetworkInterpretation is null.");
 		if (nodes.size() < 4)
@@ -151,11 +153,11 @@ public class AnalyzeNetworkTask extends AbstractTask implements TunableValidator
 			analyzer = new DirNetworkAnalyzer(network, nodes, interpr, desktop, manager);
 		else
 			analyzer = new UndirNetworkAnalyzer(network, interpr, desktop, manager);
-		
+
 		analyzer.computeAll();
-		
+
 	}
-	
+
 	private final NetworkInterpretation interpretNetwork(NetworkInspection aInsp) {
 		final NetworkStatus status = NetworkStatus.getStatus(aInsp);
 		final NetworkInterpretation[] interpretations = status.getInterpretations();

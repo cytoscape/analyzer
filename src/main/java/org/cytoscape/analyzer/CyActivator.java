@@ -17,16 +17,16 @@ import static org.cytoscape.work.ServiceProperties.COMMAND_SUPPORTS_JSON;
  * Copyright (C) 2013 The Cytoscape Consortium
  * %%
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
+ *
+ * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
@@ -60,24 +60,24 @@ import org.osgi.framework.BundleContext;
 
 
 public class CyActivator extends AbstractCyActivator {
-	
+
 	public CyActivator() {
 		super();
 	}
-	
+
 	@Override
 	public void start(BundleContext bc) {
         final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
         final CySwingApplication desktop = getService(bc, CySwingApplication.class);
         final CyApplicationManager mgr = getService(bc, CyApplicationManager.class);
         final CyNetworkManager netmgr = getService(bc, CyNetworkManager.class);
-		final AnalyzerManager manager = new AnalyzerManager(registrar, desktop);		
+		final AnalyzerManager manager = new AnalyzerManager(registrar, desktop);
 
 		Properties props = new Properties();
-		
+
 		{	// create and register the task factory to run the analysis
 			props.clear();
-			props.put(ID, "analyzeNetworkTaskFactory");	
+			props.put(ID, "analyzeNetworkTaskFactory");
 			props.put(TITLE, "Analyze Network");
 			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "analyze");
@@ -117,7 +117,7 @@ public class CyActivator extends AbstractCyActivator {
 			RemoveDupEdgesTaskFactory factory = new RemoveDupEdgesTaskFactory();
 			registerService(bc,factory, TaskFactory.class, props);
     }
-		
+
 		RemoveDupEdgesAction remDupEdgesAction = new RemoveDupEdgesAction(mgr,desktop,netmgr);
 		RemoveSelfLoopsAction removeSelfLoopsAction = new RemoveSelfLoopsAction(mgr,desktop,netmgr);
 		registerService(bc,remDupEdgesAction,CyAction.class, new Properties());
@@ -125,7 +125,7 @@ public class CyActivator extends AbstractCyActivator {
 
 //		{			// adding a second task
 //			props.clear();
-//			props.put(ID, "analyzeDegreeTaskFactory");	
+//			props.put(ID, "analyzeDegreeTaskFactory");
 //			props.put(TITLE, "Compute Degree Only");
 //			props.put(COMMAND_NAMESPACE, "analyzer");
 //			props.put(COMMAND, "degree");
@@ -145,8 +145,8 @@ public class CyActivator extends AbstractCyActivator {
 //		}
 
 		// MOVED TO:  manager.registerResultsPanel
-//		{	// create and register the results panel, 
-//			// and listen for network change events, 
+//		{	// create and register the results panel,
+//			// and listen for network change events,
 //			// so we always show the current network stats
 //			ResultsPanel resultsPanel = new ResultsPanel(manager);
 //			registerService(bc, resultsPanel, CytoPanelComponent.class);
@@ -155,7 +155,7 @@ public class CyActivator extends AbstractCyActivator {
 //			panel.setState(CytoPanelState.DOCK);
 //		}
 
-		{	
+		{
 			String version = bc.getBundle().getVersion().toString();
 
 			VersionTaskFactory versionTask = new VersionTaskFactory(version);
@@ -165,7 +165,7 @@ public class CyActivator extends AbstractCyActivator {
 			props.setProperty(COMMAND_DESCRIPTION, "Display the analyzer version");
 			props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the analyzer app.");
 			props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"4.3.1\"}");
+			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"4.4.8\"}");
 			registerService(bc, versionTask, TaskFactory.class, props);
 
 		}
