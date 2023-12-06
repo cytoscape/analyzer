@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -251,14 +252,12 @@ public class ResultsPanel extends JPanel
 		else if (val instanceof Integer )
 			strVal = String.format("%3d", val);
 
-		JLabel keyLabel = new JLabel(key);
+		JTextArea keyLabel = new JTextArea();
+		keyLabel.setText(key + ": " + strVal);
 		keyLabel.setFont(labelFont);
 
 		line.add(keyLabel, d.anchor("west").expandHoriz());
 
-		JLabel valLabel = new JLabel(strVal);
-		valLabel.setFont(textFont);
-		line.add(valLabel, d.right().noExpand());
 		return line;
 	}
 
