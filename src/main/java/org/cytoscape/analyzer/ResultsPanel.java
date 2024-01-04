@@ -9,7 +9,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Font;
-import java.awt.GridBagLayout;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -81,7 +81,7 @@ public class ResultsPanel extends JPanel
 		createGraphButtons();
 		
 		// var layout = new GroupLayout(this);
-		setLayout(new GridBagLayout());
+		setLayout(new FlowLayout());
 
 		EasyGBC c = new EasyGBC();
 
@@ -100,7 +100,7 @@ public class ResultsPanel extends JPanel
 		}
 
 		{
-			mainPanel = new JPanel(new GridBagLayout());
+			mainPanel = new JPanel(new FlowLayout());
 			mainPanelGBC = new EasyGBC();
 			var scrollPane = new JScrollPane(mainPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
 			                                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -239,9 +239,7 @@ public class ResultsPanel extends JPanel
 //		closenessClusterScatter.addActionListener(evt -> manager.makeClosenessClusterScatter());
 	}
 
-	private JPanel addLine(String key, Object val) {
-		JPanel line = new JPanel(new GridBagLayout());
-		EasyGBC d = new EasyGBC();
+	private String addLine(String key, Object val) {
 
 		String strVal = null;
 
@@ -252,13 +250,9 @@ public class ResultsPanel extends JPanel
 		else if (val instanceof Integer )
 			strVal = String.format("%3d", val);
 
-		JTextArea keyLabel = new JTextArea();
-		keyLabel.setText(key + ": " + strVal);
-		keyLabel.setFont(labelFont);
+		String keyLabel = key + ": " + strVal + "  \n";
 
-		line.add(keyLabel, d.anchor("west").expandHoriz());
-
-		return line;
+		return keyLabel;
 	}
 
 	public void actionPerformed(ActionEvent event) {
@@ -274,25 +268,22 @@ public class ResultsPanel extends JPanel
 		mainPanel.removeAll();
 		mainPanelGBC.reset();
 
-		JPanel statsPanel = new JPanel(new GridBagLayout());
-		EasyGBC d = new EasyGBC();
-		{
-			var title = new JLabel(HEADER_TITLE);
-			title.setHorizontalAlignment(SwingConstants.CENTER);
-			title.setVisible(true);
-			title.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-			LookAndFeelUtil.makeSmall(title);
-			statsPanel.add(title, d.anchor("northwest").expandHoriz());
-		}
-
+		JPanel statsPanel = new JPanel(new FlowLayout());
+		
+		StringBuilder allStatsBuilder = new StringBuilder(HEADER_TITLE + "  \n");
 		var keys = stats.getKeys();
 		for (String key: keys) {
 			Object val = stats.get(key);
 			String s = Msgs.get(key);
 			if (val != null && !key.equals("networkTitle"))
-				statsPanel.add(addLine(s, val), d.insets(2, 0, 0, 0).anchor("west").down().expandHoriz());
+				allStatsBuilder.append(addLine(s, val));
 		}
 		mainPanel.add(statsPanel, mainPanelGBC.insets(10, 5, 5, 5).anchor("northwest").expandHoriz());
+		String allStats = allStatsBuilder.toString();
+		JTextArea allStatsLabel = new JTextArea(allStats);
+		allStatsLabel.setFont(labelFont);
+		allStatsLabel.setEditable(false);
+		statsPanel.add(allStatsLabel);
 		mainPanel.add(new JLabel(), mainPanelGBC.anchor("west").expandBoth());
 		enableButtons(true);
 		revalidate();
