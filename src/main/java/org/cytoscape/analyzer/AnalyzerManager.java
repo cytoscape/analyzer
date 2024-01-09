@@ -49,8 +49,8 @@ public class AnalyzerManager implements SessionLoadedListener {
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
 //		args.put("url",url);
-		args.put("x","Degree");
-		TaskIterator ti = commandTF.createTaskIterator("cychart","histogram",args, null);
+		args.put("xCol","Degree");
+		TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
 		taskManager.execute(ti);
 		
 	}
@@ -60,9 +60,9 @@ public class AnalyzerManager implements SessionLoadedListener {
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
 //		args.put("url",url);
-		args.put("x","Degree");
-		args.put("y","BetweennessCentrality");
-		TaskIterator ti = commandTF.createTaskIterator("cychart","scatter",args, null);
+		args.put("xCol","Degree");
+		args.put("yCol","BetweennessCentrality");
+		TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
 		taskManager.execute(ti);
 		
 	}
