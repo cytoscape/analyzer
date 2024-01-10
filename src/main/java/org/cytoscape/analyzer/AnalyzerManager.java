@@ -11,14 +11,19 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.command.CommandExecutorTaskFactory;
+import org.cytoscape.command.AvailableCommands;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
+import org.cytoscape.work.FinishStatus;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 
+import javax.swing.JOptionPane;
 
 public class AnalyzerManager implements SessionLoadedListener {
 
@@ -26,17 +31,23 @@ public class AnalyzerManager implements SessionLoadedListener {
 	final private CyServiceRegistrar registrar; 
 	final private HashMap<String, String> settings;
 	final private CySwingApplication application;
+	private AvailableCommands availableCommands;
 
 	private ResultsPanel resultsPanel;
 
 	public AnalyzerManager(final CyServiceRegistrar reg, CySwingApplication desktop) {
 		registrar = reg;
 		this.taskManager = registrar.getService(TaskManager.class);
+		this.availableCommands = registrar.getService(AvailableCommands.class);
 		application = desktop;
 		resultsPanel = new ResultsPanel(this);
 		settings = new HashMap<String, String>();
 	}
 
+
+	private boolean isCyplotInstalled() {
+        return availableCommands.getNamespaces().contains("cyplot");
+    }
 
 	@Override
 	public void handleEvent(SessionLoadedEvent e) {
@@ -48,24 +59,67 @@ public class AnalyzerManager implements SessionLoadedListener {
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
-//		args.put("url",url);
-		args.put("xCol","Degree");
-		TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
-		taskManager.execute(ti);
-		
+		if (!isCyplotInstalled()){
+		int response = JOptionPane.showConfirmDialog(null, "Do you want to install cyPlot app to use this functionality?", "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		if (response == JOptionPane.YES_OPTION) {
+			Map<String, Object> argsApp = new HashMap<>();
+			argsApp.put("app","cyplot");
+			TaskIterator installCyPlot = commandTF.createTaskIterator("apps","install",argsApp, null);
+			taskManager.execute(installCyPlot, new TaskObserver() {
+			@Override
+			public void taskFinished(ObservableTask task) {}
+			public void allFinished(FinishStatus finishStatus) {
+				args.put("xCol","Degree");
+				TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
+				taskManager.execute(ti);
+			 		}
+				}
+				);
+			} else {
+				return;
+			}	
+		} else {
+			args.put("xCol","Degree");
+			TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
+			taskManager.execute(ti);
+		}
 	}
+
+	
 	public void makeBetweenScatter() {
 		if (NetworkAnalyzer.verbose) 	System.out.println("makeBetweenScatter");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
-//		args.put("url",url);
-		args.put("xCol","Degree");
-		args.put("yCol","BetweennessCentrality");
-		TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
-		taskManager.execute(ti);
-		
+		if (!isCyplotInstalled()){
+		int response = JOptionPane.showConfirmDialog(null, "Do you want to install cyPlot app to use this functionality?", "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		if (response == JOptionPane.YES_OPTION) {
+			Map<String, Object> argsApp = new HashMap<>();
+			argsApp.put("app","cyplot");
+			TaskIterator installCyPlot = commandTF.createTaskIterator("apps","install",argsApp, null);
+			taskManager.execute(installCyPlot, new TaskObserver() {
+			@Override
+			public void taskFinished(ObservableTask task) {}
+			public void allFinished(FinishStatus finishStatus) {
+				args.put("xCol","Degree");
+				args.put("yCol","BetweennessCentrality");
+				TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
+				taskManager.execute(ti);
+			 			}
+					}
+				);
+			} else {
+				return;
+			}
+		} else {
+			args.put("xCol","Degree");
+			args.put("yCol","BetweennessCentrality");
+			TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
+			taskManager.execute(ti);
+		}
 	}
+
+
 	public void makeClosenessClusterScatter() {
 		if (NetworkAnalyzer.verbose) 	System.out.println("makeClosenessClusterScatter");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
