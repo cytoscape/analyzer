@@ -339,7 +339,7 @@ boolean isPaired = false;
 
 	// Reduce results into global (parent's) variables
 		
-		accumulate(localNetworkEdgeCount, localMaxConnectivity, localMaxConnectivity);
+		accumulate(localNetworkEdgeCount, localMaxConnectivity, localComponentDiameter);
 		accumulate(localSharedNeighborsHist, localSPathLengths, localNodeBetweenness, localEdgeBetweenness, localStress);
 		saveStatistics();
 
@@ -543,11 +543,10 @@ boolean isPaired = false;
 		return degree;
 	}
 
-	public void accumulate(int localNetworkEdgeCount, int localMaxConnectivity, int localMaxConnectivity2) {
+	public void accumulate(int localNetworkEdgeCount, int localMaxConnectivity, int localComponentDiameter) {
 		networkEdgeCount += localNetworkEdgeCount;
 		maxConnectivity = Math.max(maxConnectivity, localMaxConnectivity);
-		componentDiameter = Math.max(componentDiameter, localMaxConnectivity);
-			
+		componentDiameter = Math.max(componentDiameter, localComponentDiameter);
 	}
 
 	public void accumulate(long[] sharedNeighbors, long[] pathLens, double[] nodeBetweenness,
