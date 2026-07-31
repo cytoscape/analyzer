@@ -366,19 +366,19 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 	
 				if (cancelled)
 					break;
-	
-				// Reduce results into global (parent's) variables
-				diameter = Math.max(diameter, localDiameter);
-				radius = Math.min(radius, localRadius);
-				for (int i = 0; i < localSPathLengths.length; i++)
-					sPathLengths[i] += localSPathLengths[i];
-				for (int i = 0; i < localNodeBetweenness.length; i++)
-					nodeBetweennessLean[i] += localNodeBetweenness[i];
-				for (int i = 0; i < localEdgeBetweenness.length; i++)
-					edgeBetweennessLean[i] += localEdgeBetweenness[i];
-				for (int i = 0; i < localStress.length; i++)
-					stressLean[i] += localStress[i];
-		
+			}
+
+			// Reduce results into global (parent's) variables
+			diameter = Math.max(diameter, localDiameter);
+			radius = Math.min(radius, localRadius);
+			for (int i = 0; i < localSPathLengths.length; i++)
+				sPathLengths[i] += localSPathLengths[i];
+			for (int i = 0; i < localNodeBetweenness.length; i++)
+				nodeBetweennessLean[i] += localNodeBetweenness[i];
+			for (int i = 0; i < localEdgeBetweenness.length; i++)
+				edgeBetweennessLean[i] += localEdgeBetweenness[i];
+			for (int i = 0; i < localStress.length; i++)
+				stressLean[i] += localStress[i];
 
 			if (cancelled)
 			{
@@ -492,7 +492,6 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 		stats.set("time", time / 1000.0);
 		progress = nodeCount;
 		doOutput();
-	}
 	}
 	//-----------------------------------------------------------------------
 
@@ -651,7 +650,8 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 				result.addSPL(length);
 			}
 
-			outSPathLengths[length] += nextFrontierSize;
+			if (length < outSPathLengths.length)
+				outSPathLengths[length] += nextFrontierSize;
 			frontierSize = nextFrontierSize;
 			length++;
 		}
