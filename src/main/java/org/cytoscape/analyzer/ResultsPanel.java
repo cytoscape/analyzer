@@ -2,36 +2,40 @@ package org.cytoscape.analyzer;
 
 
 import static javax.swing.GroupLayout.DEFAULT_SIZE;
+import static javax.swing.GroupLayout.PREFERRED_SIZE;
 import static javax.swing.GroupLayout.Alignment.CENTER;
 import static javax.swing.GroupLayout.Alignment.LEADING;
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.ComponentOrientation;
+import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FlowLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.ParallelGroup;
+import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextPane;
+import javax.swing.JTable;
+import javax.swing.JViewport;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
-import org.cytoscape.analyzer.util.EasyGBC;
 import org.cytoscape.analyzer.util.IconUtil;
-import org.cytoscape.analyzer.util.JSONUtils;
 import org.cytoscape.analyzer.util.Msgs;
 import org.cytoscape.analyzer.util.NetworkStats;
 import org.cytoscape.application.CyApplicationManager;
@@ -41,112 +45,82 @@ import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.util.swing.LookAndFeelUtil;
 import org.cytoscape.util.swing.TextIcon;
+import org.cytoscape.work.TaskFactory;
 
 
 /**
  * Displays controls for Network Analyzer
  * @author Adam Treister
- *
  */
-public class ResultsPanel extends JPanel 
+@SuppressWarnings("serial")
+public class ResultsPanel extends JPanel
        implements CytoPanelComponent2, ActionListener, SetCurrentNetworkListener {
 
-	private static final long serialVersionUID = 1L;
+	final String HEADER_TITLE = "SUMMARY STATISTICS:";
+
+	/** Service filter used to look up the task factory behind the "New Analysis..." button. */
+	private static final String ANALYZE_FACTORY_FILTER = "(id=analyzeNetworkTaskFactory)";
+
+	private static final String[] EXTRA_INFO = {
+		"Node specific statistics are found in the Node Table.",
+		"Edge <i>Betweenness</i> is added to the Edge Table."
+	};
+
 	final AnalyzerManager manager;
 	final CyApplicationManager appManager;
 	private Icon icon;
 	private JLabel networkName;
-	private JLabel label;
+	private JButton newAnalysis;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
-	private JPanel mainPanel;
-	private EasyGBC mainPanelGBC;
-	private Font labelFont;
-	private Font textFont;
+	private BodyPanel bodyPanel;
 
 	private CyNetwork network;
-
-	final String HEADER_TITLE = "Summary Statistics";
 
 	public ResultsPanel(final AnalyzerManager manager) {
 		this.manager = manager;
 		this.appManager = manager.getService(CyApplicationManager.class);
 		this.network = appManager.getCurrentNetwork();
 
-		labelFont = new Font("SansSerif", Font.BOLD, 10);
-		textFont = new Font("SansSerif", Font.PLAIN, 10);
-
+		setBackground(UIManager.getColor("Table.background"));
+		
 		createGraphButtons();
-		
-		// var layout = new GroupLayout(this);
-		setLayout(new FlowLayout());
 
-		EasyGBC c = new EasyGBC();
+		JPanel headerPanel = createHeaderPanel();
+		JPanel footerPanel = createFooterPanel();
 
-		c.insets(2,5,2,5);
-		
-		{
-			String name = "Blank";
-			if (network != null) {
-				name = network.getRow(network).get(CyNetwork.NAME, String.class);
-			}
-			networkName = new JLabel(name);
-			networkName.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-			networkName.setHorizontalAlignment(SwingConstants.CENTER);
-			networkName.setFont(labelFont.deriveFont(12.0f));
-			add(networkName, c.down().anchor("west").expandHoriz());
-		}
+		bodyPanel = new BodyPanel();
+		bodyPanel.setBackground(getBackground());
+		bodyPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-		{
-			mainPanel = new JPanel(new FlowLayout());
-			mainPanelGBC = new EasyGBC();
-			var scrollPane = new JScrollPane(mainPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
-			                                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-			scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, UIManager.getColor("Separator.foreground")));
-			scrollPane.setBackground(getBackground());
-			add(scrollPane, c.insets(5,5,0,5).down().anchor("west").expandBoth());
-		}
+		var scrollPane = new JScrollPane(bodyPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+		                                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.getViewport().setBackground(getBackground());
+		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-		{
-			// This is used if we don't have any network stats
-			label = new JLabel();
-			label.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-			label.setBackground(getBackground());
-			mainPanel.add(label, mainPanelGBC.anchor("west").expandHoriz());
-		}
+		var layout = new GroupLayout(this);
+		setLayout(layout);
 
-		{
-			var info1 = new JLabel("- Node specific statistics are found in the Node Table");
-			info1.setVisible(true);
-			info1.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-			LookAndFeelUtil.makeSmall(info1);
-			add(info1, c.down().anchor("west").expandHoriz());
-		}
+		layout.setHorizontalGroup(layout.createParallelGroup(LEADING, true)
+			.addComponent(headerPanel, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(footerPanel, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE));
+		layout.setVerticalGroup(layout.createSequentialGroup()
+			.addComponent(headerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(footerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
 
-		{
-			var info2 = new JLabel("- Edge Betweenness is added to the Edge Table");
-			info2.setVisible(true);
-			info2.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-			LookAndFeelUtil.makeSmall(info2);
-			add(info2, c.down().anchor("west").expandHoriz());
-		}
-
-		{
-			JPanel buttonBox = new JPanel();
-			buttonBox.setLayout(new BoxLayout(buttonBox, BoxLayout.PAGE_AXIS));
-			degreeHisto.setAlignmentX(Component.CENTER_ALIGNMENT);
-			betweenScatter.setAlignmentX(Component.CENTER_ALIGNMENT);
-			buttonBox.add(degreeHisto);
-			buttonBox.add(betweenScatter);
-			add(buttonBox, c.down().expandHoriz());
-		}
+		updateHeader(null);
+		setResultString("");
 
 		revalidate();
 		repaint();
 	}
 
+	@Override
 	public String getIdentifier() {		return "org.cytoscape.analyzer.ResultsPanel";	}
 
 
@@ -159,20 +133,17 @@ public class ResultsPanel extends JPanel
 		updateHeader(st);
 
 		enableButtons(network != null);
-		if (network != null) 
-		{
+		if (network != null) {
 			if (network.getNodeCount() < 1 || network.getEdgeCount() < 1) {
-				stats = "Empty Network";
+				stats = "-- Empty Network --";
 				enableButtons(false);
-			} else 
-			{
-//				stats = network.getDefaultNetworkTable().getRow(network.getSUID()).get("statistics", String.class);
+			} else {
 				CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
 				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
 				st = parseJson(stats);
 			}
 			if (st == null && stats == null)
-				stats = "<html><body><p style='text-align:center'>Tools &rarr; Analyze Network<br/>to calculate statistics</p></body></html>";
+				stats = "-- No statistics found --<br>(run a new analysis to calculate statistics for this network)";
 		}
 
 		if (st == null) {
@@ -183,24 +154,27 @@ public class ResultsPanel extends JPanel
 	}
 
 	public void enableButtons(boolean b) {
-		degreeHisto.setEnabled(b);;
+		degreeHisto.setEnabled(b);
 		betweenScatter.setEnabled(b);
-//		closenessClusterScatter.setEnabled(b);
-		
 	}
 
 	//-----------------------------------------------
 	private NetworkStats parseJson(String stats) {
 		if (stats == null || !stats.startsWith("{")) return null;
-		// Map<String, Object> map = JSONUtils.jsonToMap(stats);
 		NetworkStats st = new NetworkStats(stats);
 		return st;
-		
 	}
 
 	//-----------------------------------------------
-	@Override	public Component getComponent() {		return this;	}
-	@Override	public CytoPanelName getCytoPanelName() {		return CytoPanelName.EAST;	}
+	@Override
+	public Component getComponent() {
+		return this;
+	}
+
+	@Override
+	public CytoPanelName getCytoPanelName() {
+		return CytoPanelName.EAST;
+	}
 
 	@Override
 	public Icon getIcon() {
@@ -209,52 +183,139 @@ public class ResultsPanel extends JPanel
 
 		return icon;
 	}
-	
-	@Override	public String getTitle() {		return "Analyzer";	}
+
+	@Override
+	public String getTitle() {
+		return "Analyzer";
+	}
 
 	///-----------------------------------------------
+	/**
+	 * Header showing the interpretation and the network name, plus the "New Analysis..." button.
+	 */
+	private JPanel createHeaderPanel() {
+		networkName = new JLabel();
+
+		newAnalysis = new JButton("New Analysis...");
+		newAnalysis.addActionListener(evt -> runNewAnalysis());
+
+		JPanel panel = new JPanel();
+		panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Separator.foreground")));
+
+		var layout = new GroupLayout(panel);
+		panel.setLayout(layout);
+		layout.setAutoCreateContainerGaps(true);
+		layout.setAutoCreateGaps(true);
+
+		// The name is free to shrink, so a narrow panel clips the title instead of the button
+		layout.setHorizontalGroup(layout.createSequentialGroup()
+			.addComponent(networkName, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(newAnalysis, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
+		layout.setVerticalGroup(layout.createParallelGroup(CENTER)
+			.addComponent(networkName)
+			.addComponent(newAnalysis));
+
+		return panel;
+	}
+
+	/**
+	 * Footer holding the chart buttons, stacked and centered.
+	 */
+	private JPanel createFooterPanel() {
+		JPanel panel = new JPanel();
+		panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Separator.foreground")));
+
+		var layout = new GroupLayout(panel);
+		panel.setLayout(layout);
+		layout.setAutoCreateContainerGaps(true);
+		layout.setAutoCreateGaps(!LookAndFeelUtil.isAquaLAF());
+
+		// Stacked and centered. They are the same size thanks to equalizeSize(), and are
+		// allowed to shrink so that this row does not dictate a minimum width for the whole
+		// panel, which would clip the statistics when the CytoPanel is narrow.
+		layout.setHorizontalGroup(layout.createSequentialGroup()
+			.addGap(0, 0, Short.MAX_VALUE)
+			.addGroup(layout.createParallelGroup(CENTER, true)
+				.addComponent(degreeHisto, 0, PREFERRED_SIZE, PREFERRED_SIZE)
+				.addComponent(betweenScatter, 0, PREFERRED_SIZE, PREFERRED_SIZE))
+			.addGap(0, 0, Short.MAX_VALUE));
+		layout.setVerticalGroup(layout.createSequentialGroup()
+			.addComponent(degreeHisto)
+			.addComponent(betweenScatter));
+
+		return panel;
+	}
+
+	/**
+	 * Runs the same task as Tools &rarr; Analyze Network, so the user gets the
+	 * "Analyze as Directed Graph?" dialog built from the task's tunables.
+	 */
+	private void runNewAnalysis() {
+		TaskFactory factory = manager.getService(TaskFactory.class, ANALYZE_FACTORY_FILTER);
+		if (factory != null)
+			manager.executeTasks(factory);
+	}
+
 	private void updateHeader(NetworkStats stats) {
-		String name;
+		String title = null;
 		if (stats != null)
-			name = (String)stats.get("networkTitle");
+			title = (String)stats.get("networkTitle");
 		else if (network != null)
-			name = network.getRow(network).get(CyNetwork.NAME, String.class);
-		else
-			name = "No Network Selected";
-		networkName.setText(name);
+			title = network.getRow(network).get(CyNetwork.NAME, String.class);
+
+		newAnalysis.setEnabled(network != null);
+
+		if (title == null) {
+			networkName.setText("No Network Selected");
+			return;
+		}
+
+		// NetworkStats stores the title as "<network name> (directed|undirected)".
+		// Show it the way the web version does: "Directed—<network name>".
+		String interpretation = null;
+		if (title.endsWith(Msgs.DT_DIRECTED)) {
+			interpretation = "Directed";
+			title = title.substring(0, title.length() - Msgs.DT_DIRECTED.length());
+		} else if (title.endsWith(Msgs.DT_UNDIRECTED)) {
+			interpretation = "Undirected";
+			title = title.substring(0, title.length() - Msgs.DT_UNDIRECTED.length());
+		}
+
+		StringBuilder text = new StringBuilder("<html><nobr>");
+		if (interpretation != null)
+			text.append("<b>").append(interpretation).append("</b>&#8212;");
+		text.append(escapeHtml(title)).append("</nobr></html>");
+		networkName.setText(text.toString());
 	}
 
 	private void createGraphButtons() {
 		degreeHisto = new JButton("Node Degree Distribution");
 		betweenScatter = new JButton("Betweenness by Degree");
-//		closenessClusterScatter = new JButton("Show Closeness");
 		enableButtons(false);
-		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);//, closenessClusterScatter
+		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);
 
-		degreeHisto.setFont(labelFont);
-		betweenScatter.setFont(labelFont);
-		
 		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
 		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
-//		closenessClusterScatter.addActionListener(evt -> manager.makeClosenessClusterScatter());
 	}
 
-	private String addLine(String key, Object val) {
-
-		String strVal = null;
-
-		if (val instanceof String)
-			strVal = (String)val;
-		else if (val instanceof Double )
-			strVal = String.format("%8.3f", val);
-		else if (val instanceof Integer )
-			strVal = String.format("%3d", val);
-
-		String keyLabel = key + ": " + strVal + "  \n";
-
-		return keyLabel;
+	private static String escapeHtml(String s) {
+		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
+	/**
+	 * Formats a statistic for display. Values parsed back from the stored JSON arrive as
+	 * <code>String</code> unless they have a fractional part, in which case they are
+	 * <code>Double</code>.
+	 */
+	private static String formatValue(Object val) {
+		if (val instanceof Double)
+			return String.format("%.3f", val);
+		if (val instanceof Float)
+			return String.format("%.3f", ((Float)val).doubleValue());
+		return String.valueOf(val).trim();
+	}
+
+	@Override
 	public void actionPerformed(ActionEvent event) {
 		String command = event.getActionCommand();
 		switch (command) {
@@ -265,41 +326,218 @@ public class ResultsPanel extends JPanel
 	public void setResults(NetworkStats stats) {
 		updateHeader(stats);
 
-		mainPanel.removeAll();
-		mainPanelGBC.reset();
+		bodyPanel.removeAll();
 
-		JPanel statsPanel = new JPanel(new FlowLayout());
+		var title = new JLabel(HEADER_TITLE);
+		title.setFont(title.getFont().deriveFont(Font.BOLD));
+
+		var statsTable = createStatsTable(stats);
+
+		var time = stats.get("time");
+		var timeLabel = new JLabel(time == null ? "" : Msgs.get("time") + ": " + formatValue(time));
+		timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+		var layout = new GroupLayout(bodyPanel);
+		bodyPanel.setLayout(layout);
+		layout.setAutoCreateGaps(true);
+
+		// Everything is allowed to shrink to nothing, so that a narrow panel never forces the
+		// content wider than the viewport and pushes the values out of sight
+		var copyButton = createCopyButton(statsTable);
 		
-		StringBuilder allStatsBuilder = new StringBuilder(HEADER_TITLE + "  \n");
-		var keys = stats.getKeys();
-		for (String key: keys) {
-			Object val = stats.get(key);
-			String s = Msgs.get(key);
-			if (val != null && !key.equals("networkTitle"))
-				allStatsBuilder.append(addLine(s, val));
+		LookAndFeelUtil.makeSmall(timeLabel, copyButton);
+
+		ParallelGroup horizontal = layout.createParallelGroup(LEADING, true)
+			.addComponent(title, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(statsTable, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addGroup(layout.createSequentialGroup()
+				.addComponent(timeLabel, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
+		SequentialGroup vertical = layout.createSequentialGroup()
+			.addComponent(title)
+			.addPreferredGap(ComponentPlacement.UNRELATED)
+			.addComponent(statsTable, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			.addPreferredGap(ComponentPlacement.RELATED)
+			.addGroup(layout.createParallelGroup(CENTER)
+				.addComponent(timeLabel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE))
+			.addPreferredGap(ComponentPlacement.UNRELATED);
+
+		for (String info : EXTRA_INFO) {
+			// nobr keeps these on one line, so shrinking clips them instead of re-wrapping
+			// into a taller label than the layout reserved room for
+			JLabel bullet = new JLabel("<html><nobr>&#8226;&nbsp;" + info + "</nobr></html>");
+			LookAndFeelUtil.makeSmall(bullet);
+			horizontal.addComponent(bullet, 0, DEFAULT_SIZE, Short.MAX_VALUE);
+			vertical.addComponent(bullet);
 		}
-		mainPanel.add(statsPanel, mainPanelGBC.insets(10, 5, 5, 5).anchor("northwest").expandHoriz());
-		String allStats = allStatsBuilder.toString();
-		JTextArea allStatsLabel = new JTextArea(allStats);
-		allStatsLabel.setFont(labelFont);
-		allStatsLabel.setEditable(false);
-		statsPanel.add(allStatsLabel);
-		mainPanel.add(new JLabel(), mainPanelGBC.anchor("west").expandBoth());
+		
+		vertical.addPreferredGap(ComponentPlacement.UNRELATED);
+
+		layout.setHorizontalGroup(horizontal);
+		layout.setVerticalGroup(vertical);
+
 		enableButtons(true);
 		revalidate();
 		repaint();
 	}
 
-	public void setResultString(String out) {
-		mainPanel.removeAll();
-		mainPanelGBC.reset();
-		label = new JLabel();
-		label.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		label.setBackground(getBackground());
-		label.setText(out);
-		label.setOpaque(true);
-		mainPanel.add(label, mainPanelGBC.anchor("west").expandBoth());
+	/**
+	 * Small icon button that puts the whole statistics table on the clipboard, for when the
+	 * user does not want to select the rows by hand.
+	 */
+	private JButton createCopyButton(JTable table) {
+		var iconManager = manager.getService(IconManager.class);
+		var icon = new TextIcon(IconManager.ICON_COPY, iconManager.getIconFont(18.0f), 24, 24);
+
+		var button = new JButton(icon);
+		button.setToolTipText("Copy to clipboard");
+		button.setMargin(new Insets(0, 0, 0, 0));
+		button.addActionListener(evt -> copyToClipboard(table));
+
+		return button;
+	}
+
+	private static void copyToClipboard(JTable table) {
+		var text = new StringBuilder();
+
+		for (int row = 0; row < table.getRowCount(); row++) {
+			for (int col = 0; col < table.getColumnCount(); col++) {
+				if (col > 0)
+					text.append('\t');
+				text.append(table.getValueAt(row, col));
+			}
+			text.append('\n');
+		}
+
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text.toString()), null);
+	}
+
+	/**
+	 * Two column, read-only table of statistics: names on the left, values right-aligned
+	 * against the right edge. Being a table, the rows can be selected and copied to the
+	 * clipboard with the usual select-all / copy keystrokes.
+	 */
+	private JTable createStatsTable(NetworkStats stats) {
+		var rows = new ArrayList<String[]>();
+
+		for (String key : stats.getKeys()) {
+			// "" marks a group separator, and these two are shown elsewhere in the panel
+			if (key == null || key.trim().isEmpty() || key.equals("networkTitle") || key.equals("time"))
+				continue;
+
+			Object val = stats.get(key);
+			String name = Msgs.get(key);
+			if (val == null || name == null)
+				continue;
+
+			rows.add(new String[] { name, formatValue(val) });
+		}
+
+		var model = new DefaultTableModel(rows.toArray(new String[rows.size()][]),
+		                                  new String[] { "Statistic", "Value" }) {
+			@Override
+			public boolean isCellEditable(int row, int column) {	return false;	}
+		};
+
+		var table = new JTable(model);
+		table.setTableHeader(null);
+		table.setShowHorizontalLines(true);
+		table.setShowVerticalLines(false);
+		table.setGridColor(UIManager.getColor("Separator.foreground"));
+		table.setIntercellSpacing(new Dimension(0, 1));
+		table.setCellSelectionEnabled(true);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		table.setBackground(getBackground());
+
+		var labelFont = UIManager.getFont("Label.font");
+		if (labelFont != null)
+			table.setFont(labelFont);
+
+		var metrics = table.getFontMetrics(table.getFont());
+		table.setRowHeight(metrics.getHeight() + 6);
+
+		var rightAligned = new DefaultTableCellRenderer();
+		rightAligned.setHorizontalAlignment(SwingConstants.RIGHT);
+
+		// Pinning the value column to its content width keeps the numbers against the right
+		// edge and visible: the name column is the one that gives way on a narrow panel
+		int valueWidth = 0;
+		for (String[] row : rows)
+			valueWidth = Math.max(valueWidth, metrics.stringWidth(row[1]));
+		valueWidth += metrics.charWidth('0') * 2;
+
+		var valueColumn = table.getColumnModel().getColumn(1);
+		valueColumn.setCellRenderer(rightAligned);
+		valueColumn.setMinWidth(valueWidth);
+		valueColumn.setMaxWidth(valueWidth);
+		valueColumn.setPreferredWidth(valueWidth);
+
+		return table;
+	}
+
+	private void setResultString(String out) {
+		bodyPanel.removeAll();
+		
+		if (out != null)
+			out = "<html><div style='text-align: center;'>" + out + "</div></html>";
+		else
+			out = "";
+
+		var label = new JLabel(out);
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setVerticalAlignment(SwingConstants.CENTER);
+		label.setEnabled(false);
+
+		var layout = new GroupLayout(bodyPanel);
+		bodyPanel.setLayout(layout);
+
+		layout.setHorizontalGroup(layout.createSequentialGroup()
+			.addComponent(label, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE));
+		layout.setVerticalGroup(layout.createSequentialGroup()
+			.addGap(0, 0, Short.MAX_VALUE)
+			.addComponent(label, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			.addGap(0, 0, Short.MAX_VALUE));
+
 		revalidate();
 		repaint();
+	}
+
+	/**
+	 * Scrollable content panel that follows the viewport width, so right-aligned values stay
+	 * on the right edge instead of being clipped.
+	 */
+	private static class BodyPanel extends JPanel implements Scrollable {
+
+		@Override
+		public Dimension getPreferredScrollableViewportSize() {
+			return getPreferredSize();
+		}
+
+		@Override
+		public int getScrollableUnitIncrement(Rectangle r, int orientation, int direction) {
+			return 16;
+		}
+
+		@Override
+		public int getScrollableBlockIncrement(Rectangle r, int orientation, int direction) {
+			return 64;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportWidth() {
+			return true;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportHeight() {
+			// Forces the panel to stretch to full viewport height
+			// if the panel's content is smaller than the scroll pane window.
+			if (getParent() instanceof JViewport) {
+				return (((JViewport) getParent()).getHeight() > getPreferredSize().height);
+			}
+			return false;
+		}
 	}
 }

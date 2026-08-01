@@ -376,7 +376,7 @@ boolean isPaired = false;
 		long edgeHash = computeEdgeHash(sourceID, targetID);						
 		double eb = Double.NaN;
 		if (edgeToInt(edgeHash) != null)
-			eb = edgeBetweennessLean[(int) edgeToInt(edgeHash)];
+			eb = edgeBetweennessLean[edgeToInt(edgeHash)];
 		if (Double.isNaN(eb)) 	eb = 0.0;
 		CyRow edgeRow = network.getRow(edge);
 		edgeRow.set( Msgs.getAttr("ebt"), eb);
@@ -498,7 +498,7 @@ boolean isPaired = false;
 	{
 		int smaller = id1 < id2 ? id1 : id2;
 		int bigger = id1 > id2 ? id1 : id2;
-		return (((long)smaller) << 32) + (long)bigger;
+		return (((long)smaller) << 32) + bigger;
 	}
 	/**
 	 * Gets the averages of the accumulated values and stores them in a set.

@@ -44,8 +44,8 @@ import java.util.Properties;
 
 import org.cytoscape.analyzer.tasks.AnalyzeNetworkTaskFactory;
 import org.cytoscape.analyzer.tasks.RemoveDupEdgesAction;
-import org.cytoscape.analyzer.tasks.RemoveSelfLoopsAction;
 import org.cytoscape.analyzer.tasks.RemoveDupEdgesTaskFactory;
+import org.cytoscape.analyzer.tasks.RemoveSelfLoopsAction;
 import org.cytoscape.analyzer.tasks.RemoveSelfLoopsTaskFactory;
 import org.cytoscape.analyzer.tasks.VersionTaskFactory;
 import org.cytoscape.application.CyApplicationManager;
@@ -165,7 +165,7 @@ public class CyActivator extends AbstractCyActivator {
 			props.setProperty(COMMAND_DESCRIPTION, "Display the analyzer version");
 			props.setProperty(COMMAND_LONG_DESCRIPTION, "Display the version of the analyzer app.");
 			props.setProperty(COMMAND_SUPPORTS_JSON, "true");
-			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"4.4.8\"}");
+			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"" + version + "\"}");
 			registerService(bc, versionTask, TaskFactory.class, props);
 
 		}
