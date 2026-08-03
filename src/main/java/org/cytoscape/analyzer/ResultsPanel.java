@@ -348,20 +348,22 @@ public class ResultsPanel extends JPanel
 		LookAndFeelUtil.makeSmall(timeLabel, copyButton);
 
 		ParallelGroup horizontal = layout.createParallelGroup(LEADING, true)
-			.addComponent(title, 0, DEFAULT_SIZE, Short.MAX_VALUE)
-			.addComponent(statsTable, 0, DEFAULT_SIZE, Short.MAX_VALUE)
 			.addGroup(layout.createSequentialGroup()
-				.addComponent(timeLabel, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+				.addComponent(title, 0, DEFAULT_SIZE, Short.MAX_VALUE)
 				.addPreferredGap(ComponentPlacement.RELATED)
-				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
+				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			)
+			.addComponent(statsTable, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addComponent(timeLabel, 0, DEFAULT_SIZE, Short.MAX_VALUE);
 		SequentialGroup vertical = layout.createSequentialGroup()
-			.addComponent(title)
+			.addGroup(layout.createParallelGroup(CENTER)
+				.addComponent(title)
+				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			)
 			.addPreferredGap(ComponentPlacement.UNRELATED)
 			.addComponent(statsTable, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addPreferredGap(ComponentPlacement.RELATED)
-			.addGroup(layout.createParallelGroup(CENTER)
-				.addComponent(timeLabel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
-				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE))
+			.addComponent(timeLabel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addPreferredGap(ComponentPlacement.UNRELATED);
 
 		for (String info : EXTRA_INFO) {
