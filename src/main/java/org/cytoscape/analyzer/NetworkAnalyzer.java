@@ -93,8 +93,7 @@ public abstract class NetworkAnalyzer {
 //		CyTable netTable = network.getDefaultNetworkTable();
 		CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
 		CyColumn col = hiddenTable.getColumn(columnName);
-		if (col == null)
-		{
+		if (col == null) {
 			hiddenTable.createColumn(columnName, String.class, true);
 			col = hiddenTable.getColumn(columnName);
 		}
@@ -111,8 +110,7 @@ public abstract class NetworkAnalyzer {
 			int nPanels = panel.getCytoPanelComponentCount();
 			for (int c = 0; c < nPanels; c++) {
 				var comp = panel.getComponentAt(c);
-				if (comp instanceof ResultsPanel)
-				{
+				if (comp instanceof ResultsPanel) {
 					var results = (ResultsPanel) comp;
 					results.update();
 					panel.setSelectedIndex(c);

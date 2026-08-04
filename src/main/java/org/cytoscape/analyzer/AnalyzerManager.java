@@ -4,15 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.cytoscape.application.events.SetCurrentNetworkListener;
+import javax.swing.JOptionPane;
+
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.application.swing.CytoPanel;
-import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
-import org.cytoscape.command.CommandExecutorTaskFactory;
 import org.cytoscape.command.AvailableCommands;
-import org.cytoscape.model.CyNode;
+import org.cytoscape.command.CommandExecutorTaskFactory;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
@@ -22,8 +20,6 @@ import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
-
-import javax.swing.JOptionPane;
 
 public class AnalyzerManager implements SessionLoadedListener {
 
@@ -35,15 +31,15 @@ public class AnalyzerManager implements SessionLoadedListener {
 
 	private ResultsPanel resultsPanel;
 
-	public AnalyzerManager(final CyServiceRegistrar reg, CySwingApplication desktop) {
+	public AnalyzerManager(CyServiceRegistrar reg, CySwingApplication desktop) {
 		registrar = reg;
-		this.taskManager = registrar.getService(TaskManager.class);
-		this.availableCommands = registrar.getService(AvailableCommands.class);
+		taskManager = registrar.getService(TaskManager.class);
+		availableCommands = registrar.getService(AvailableCommands.class);
 		application = desktop;
-		resultsPanel = new ResultsPanel(this);
 		settings = new HashMap<String, String>();
+		
+		resultsPanel = new ResultsPanel(this);
 	}
-
 
 	private boolean isCyplotInstalled() {
         return availableCommands.getNamespaces().contains("cyplot");
@@ -52,8 +48,8 @@ public class AnalyzerManager implements SessionLoadedListener {
 	@Override
 	public void handleEvent(SessionLoadedEvent e) {
 		unregisterResultsPanel();
-		
 	}
+	
 	public void makeDegreeHisto() {
 		if (NetworkAnalyzer.verbose) 	System.out.println("makeDegreeHisto");
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
@@ -68,6 +64,7 @@ public class AnalyzerManager implements SessionLoadedListener {
 			taskManager.execute(installCyPlot, new TaskObserver() {
 			@Override
 			public void taskFinished(ObservableTask task) {}
+			@Override
 			public void allFinished(FinishStatus finishStatus) {
 				args.put("xCol","Degree");
 				TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
@@ -84,7 +81,6 @@ public class AnalyzerManager implements SessionLoadedListener {
 			taskManager.execute(ti);
 		}
 	}
-
 	
 	public void makeBetweenScatter() {
 		if (NetworkAnalyzer.verbose) 	System.out.println("makeBetweenScatter");
@@ -100,6 +96,7 @@ public class AnalyzerManager implements SessionLoadedListener {
 			taskManager.execute(installCyPlot, new TaskObserver() {
 			@Override
 			public void taskFinished(ObservableTask task) {}
+			@Override
 			public void allFinished(FinishStatus finishStatus) {
 				args.put("xCol","Degree");
 				args.put("yCol","BetweennessCentrality");
@@ -130,7 +127,6 @@ public class AnalyzerManager implements SessionLoadedListener {
 		args.put("y","BetweennessCentrality");
 		TaskIterator ti = commandTF.createTaskIterator("cychart","scatter",args, null);
 		taskManager.execute(ti);
-		
 	}
 
 	// create and register the results panel, 

@@ -61,67 +61,63 @@ import org.osgi.framework.BundleContext;
 
 public class CyActivator extends AbstractCyActivator {
 
-	public CyActivator() {
-		super();
-	}
-
 	@Override
 	public void start(BundleContext bc) {
-        final CyServiceRegistrar registrar = getService(bc, CyServiceRegistrar.class);
-        final CySwingApplication desktop = getService(bc, CySwingApplication.class);
-        final CyApplicationManager mgr = getService(bc, CyApplicationManager.class);
-        final CyNetworkManager netmgr = getService(bc, CyNetworkManager.class);
-		final AnalyzerManager manager = new AnalyzerManager(registrar, desktop);
+		var registrar = getService(bc, CyServiceRegistrar.class);
+		var desktop = getService(bc, CySwingApplication.class);
+		var mgr = getService(bc, CyApplicationManager.class);
+		var netmgr = getService(bc, CyNetworkManager.class);
+		var manager = new AnalyzerManager(registrar, desktop);
 
-		Properties props = new Properties();
+		var props = new Properties();
 
-		{	// create and register the task factory to run the analysis
+		{ // create and register the task factory to run the analysis
 			props.clear();
 			props.put(ID, "analyzeNetworkTaskFactory");
 			props.put(TITLE, "Analyze Network");
 			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "analyze");
-			props.put(COMMAND_DESCRIPTION,  "Calculate statistics on the current network");
-			props.put(COMMAND_LONG_DESCRIPTION, "Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
-			props.put(COMMAND_EXAMPLE_JSON, "{   \"networkTitle\": \"galFiltered.sif (undirected)\",   \"nodeCount\": \"330\",  \"avNeighbors\": \"2.167\"}");
+			props.put(COMMAND_DESCRIPTION, "Calculate statistics on the current network");
+			props.put(COMMAND_LONG_DESCRIPTION,
+					"Run algorithms to calculate a set of statistics on the network, and write those statistics to the node and network tables.");
+			props.put(COMMAND_EXAMPLE_JSON,
+					"{   \"networkTitle\": \"galFiltered.sif (undirected)\",   \"nodeCount\": \"330\",  \"avNeighbors\": \"2.167\"}");
 			props.put(COMMAND_SUPPORTS_JSON, "true");
 			props.put(ENABLE_FOR, "network");
 
-			AnalyzeNetworkTaskFactory analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager );
-			registerService(bc,analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
-			props.put(PREFERRED_MENU,"Tools");
-			props.put(MENU_GRAVITY,"9.1");
+			var analyzeNetworkTaskFactory = new AnalyzeNetworkTaskFactory(registrar, desktop, manager);
+			registerService(bc, analyzeNetworkTaskFactory, NetworkCollectionTaskFactory.class, props);
+			props.put(PREFERRED_MENU, "Tools");
+			props.put(MENU_GRAVITY, "9.1");
 			props.put(IN_MENU_BAR, "true");
 			props.put(IN_TOOL_BAR, "false");
-			registerService(bc,analyzeNetworkTaskFactory, TaskFactory.class, props);
+			registerService(bc, analyzeNetworkTaskFactory, TaskFactory.class, props);
 		}
-
-    {
-      props.clear();
-      props.put(COMMAND_NAMESPACE, "analyzer");
+	    {
+			props.clear();
+			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "remove self loops");
-			props.put(COMMAND_DESCRIPTION,  "Remove any self loops in the network");
+			props.put(COMMAND_DESCRIPTION, "Remove any self loops in the network");
 			props.put(COMMAND_LONG_DESCRIPTION, "Removes node self loops");
 			props.put(COMMAND_SUPPORTS_JSON, "true");
-			RemoveSelfLoopsTaskFactory factory = new RemoveSelfLoopsTaskFactory();
-			registerService(bc,factory, TaskFactory.class, props);
-    }
-
-    {
-      props.clear();
-      props.put(COMMAND_NAMESPACE, "analyzer");
+			var factory = new RemoveSelfLoopsTaskFactory();
+			registerService(bc, factory, TaskFactory.class, props);
+	    }
+	    {
+			props.clear();
+			props.put(COMMAND_NAMESPACE, "analyzer");
 			props.put(COMMAND, "remove duplicated edges");
-			props.put(COMMAND_DESCRIPTION,  "Remove any duplcated edges in the network");
+			props.put(COMMAND_DESCRIPTION, "Remove any duplcated edges in the network");
 			props.put(COMMAND_LONG_DESCRIPTION, "Removes duplcated edges");
 			props.put(COMMAND_SUPPORTS_JSON, "true");
-			RemoveDupEdgesTaskFactory factory = new RemoveDupEdgesTaskFactory();
-			registerService(bc,factory, TaskFactory.class, props);
-    }
+			var factory = new RemoveDupEdgesTaskFactory();
+			registerService(bc, factory, TaskFactory.class, props);
+	    }
 
-		RemoveDupEdgesAction remDupEdgesAction = new RemoveDupEdgesAction(mgr,desktop,netmgr);
-		RemoveSelfLoopsAction removeSelfLoopsAction = new RemoveSelfLoopsAction(mgr,desktop,netmgr);
-		registerService(bc,remDupEdgesAction,CyAction.class, new Properties());
-		registerService(bc,removeSelfLoopsAction,CyAction.class, new Properties());
+		var remDupEdgesAction = new RemoveDupEdgesAction(mgr, desktop, netmgr);
+		var removeSelfLoopsAction = new RemoveSelfLoopsAction(mgr, desktop, netmgr);
+		registerService(bc, remDupEdgesAction, CyAction.class, new Properties());
+		registerService(bc, removeSelfLoopsAction, CyAction.class, new Properties());
 
 //		{			// adding a second task
 //			props.clear();
@@ -144,21 +140,10 @@ public class CyActivator extends AbstractCyActivator {
 //			registerService(bc,degreeOnlyNetworkTaskFactory, TaskFactory.class, props);
 //		}
 
-		// MOVED TO:  manager.registerResultsPanel
-//		{	// create and register the results panel,
-//			// and listen for network change events,
-//			// so we always show the current network stats
-//			ResultsPanel resultsPanel = new ResultsPanel(manager);
-//			registerService(bc, resultsPanel, CytoPanelComponent.class);
-//			registerService(bc, resultsPanel, SetCurrentNetworkListener.class);
-//			CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
-//			panel.setState(CytoPanelState.DOCK);
-//		}
-
 		{
 			String version = bc.getBundle().getVersion().toString();
 
-			VersionTaskFactory versionTask = new VersionTaskFactory(version);
+			var versionTask = new VersionTaskFactory(version);
 			props = new Properties();
 			props.setProperty(COMMAND_NAMESPACE, "analyzer");
 			props.setProperty(COMMAND, "version");
@@ -167,7 +152,6 @@ public class CyActivator extends AbstractCyActivator {
 			props.setProperty(COMMAND_SUPPORTS_JSON, "true");
 			props.setProperty(COMMAND_EXAMPLE_JSON, "{\"version\":\"" + version + "\"}");
 			registerService(bc, versionTask, TaskFactory.class, props);
-
 		}
 	}
 }

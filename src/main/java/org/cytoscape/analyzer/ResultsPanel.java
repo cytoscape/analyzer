@@ -45,7 +45,6 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyTable;
 import org.cytoscape.model.events.AddedEdgesEvent;
 import org.cytoscape.model.events.AddedEdgesListener;
 import org.cytoscape.model.events.AddedNodesEvent;
@@ -130,8 +129,9 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	}
 
 	@Override
-	public String getIdentifier() {		return "org.cytoscape.analyzer.ResultsPanel";	}
-
+	public String getIdentifier() {
+		return "org.cytoscape.analyzer.ResultsPanel";
+	}
 
 	@Override
 	public void handleEvent(SetCurrentNetworkEvent e) {
@@ -174,7 +174,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 			if (network.getNodeCount() < 4 || network.getEdgeCount() < 1) {
 				stats = network.getNodeCount() == 0 ? "-- Empty Network --" : "-- Network Too Small --<br>(must have at least 4 nodes and 1 edge)";
 			} else {
-				CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
+				var hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
 				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
 				st = parseJson(stats);
 			}
@@ -298,7 +298,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	 * "Analyze as Directed Graph?" dialog built from the task's tunables.
 	 */
 	private void runNewAnalysis() {
-		TaskFactory factory = manager.getService(TaskFactory.class, ANALYZE_FACTORY_FILTER);
+		var factory = manager.getService(TaskFactory.class, ANALYZE_FACTORY_FILTER);
 		if (factory != null)
 			manager.executeTasks(factory);
 	}

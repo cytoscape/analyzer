@@ -1,14 +1,12 @@
 package org.cytoscape.analyzer.tasks;
 
-import java.util.ArrayList;
-
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 The Cytoscape Consortium
+ * Copyright (C) 2006 - 2026
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as 
@@ -27,12 +25,10 @@ import java.util.ArrayList;
  */
 
 import java.util.Collection;
-import java.util.List;
 
 import org.cytoscape.analyzer.AnalyzerManager;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkCollectionTaskFactory;
@@ -40,13 +36,16 @@ import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TaskIterator;
 
 public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFactory implements TaskFactory {
-	private final CySwingApplication app; 
+	
+	private final CySwingApplication app;
 	private final CyServiceRegistrar reg;
 	private final AnalyzerManager mgr;
-	private boolean degreeOnly = false;
 	
-	public AnalyzeNetworkTaskFactory(CyServiceRegistrar registrar, CySwingApplication desktop, AnalyzerManager manager)
-	{
+	public AnalyzeNetworkTaskFactory(
+			CyServiceRegistrar registrar,
+			CySwingApplication desktop,
+			AnalyzerManager manager
+	) {
 		reg = registrar;
 		app = desktop;
 		mgr = manager;
@@ -56,15 +55,10 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 	public TaskIterator createTaskIterator(final Collection<CyNetwork> networks) {
 		return new TaskIterator(new AnalyzeNetworkTask(networks, reg, app, mgr));
 	}
+
 	@Override
 	public TaskIterator createTaskIterator() {
-		CyApplicationManager appMgr = reg.getService(CyApplicationManager.class);
-		// CyNetwork current = appMgr.getCurrentNetwork();
-
-		// List<CyNetwork> networks = new ArrayList<CyNetwork>();
-		// networks.add(current);
 		return new TaskIterator(new AnalyzeNetworkTask(null, reg, app, mgr));
-
 	}
 
 	@Override
@@ -74,22 +68,23 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 		
 		return net != null && net.getNodeCount() > 0 && net.getEdgeCount() > 0;
 	}
-	
-	static public boolean isDirected(final Collection<CyNetwork> networks)
-	{
+
+	static public boolean isDirected(final Collection<CyNetwork> networks) {
 		for (CyNetwork net : networks)
-			if (isDirected(net)) return true;
+			if (isDirected(net))
+				return true;
+		
 		return false;
 	}
-	static public boolean isDirected(CyNetwork current)
-	{
-		List<CyEdge> edges = current.getEdgeList();
-		int ct = Math.min(100, edges.size());
-		for (int i = 0; i < ct; i++)
-			if (edges.get(i).isDirected()) 
-				return true;
-	return false;
-		
-	}
 
+	static public boolean isDirected(CyNetwork current) {
+		var edges = current.getEdgeList();
+		int ct = Math.min(100, edges.size());
+		
+		for (int i = 0; i < ct; i++)
+			if (edges.get(i).isDirected())
+				return true;
+		
+		return false;
+	}
 }
