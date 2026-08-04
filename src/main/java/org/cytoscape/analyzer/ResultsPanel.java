@@ -88,7 +88,7 @@ public class ResultsPanel extends JPanel
 
 		setBackground(UIManager.getColor("Table.background"));
 		
-		createGraphButtons();
+		createChartButtons();
 
 		JPanel headerPanel = createHeaderPanel();
 		JPanel footerPanel = createFooterPanel();
@@ -210,7 +210,7 @@ public class ResultsPanel extends JPanel
 		newAnalysis = new JButton("New Analysis...");
 		newAnalysis.addActionListener(evt -> runNewAnalysis());
 
-		JPanel panel = new JPanel();
+		var panel = new JPanel();
 		panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("Separator.foreground")));
 
 		var layout = new GroupLayout(panel);
@@ -233,7 +233,7 @@ public class ResultsPanel extends JPanel
 	 * Footer holding the chart buttons, stacked and centered.
 	 */
 	private JPanel createFooterPanel() {
-		JPanel panel = new JPanel();
+		var panel = new JPanel();
 		panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Separator.foreground")));
 
 		var layout = new GroupLayout(panel);
@@ -277,7 +277,7 @@ public class ResultsPanel extends JPanel
 		newAnalysis.setEnabled(network != null);
 
 		if (title == null) {
-			networkName.setText("No Network Selected");
+			networkName.setText("");
 			return;
 		}
 
@@ -299,11 +299,20 @@ public class ResultsPanel extends JPanel
 		networkName.setText(text.toString());
 	}
 
-	private void createGraphButtons() {
-		degreeHisto = new JButton("Node Degree Distribution");
-		betweenScatter = new JButton("Betweenness by Degree");
+	private void createChartButtons() {
+		var iconManager = manager.getService(IconManager.class);
+		var icon = new TextIcon(IconManager.ICON_BAR_CHART, iconManager.getIconFont(18.0f), 24, 24);
+		
+		degreeHisto = new JButton("Node Degree Distribution", icon);
+		betweenScatter = new JButton("Betweenness by Degree", icon);
 		enableButtons(false);
 		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);
+
+		// By default the icon and the label are centered as a single block, so buttons with
+		// different text lengths put their icons at different offsets. Anchoring the content
+		// to the left lines the icons up, since the buttons are the same size
+		degreeHisto.setHorizontalAlignment(SwingConstants.LEFT);
+		betweenScatter.setHorizontalAlignment(SwingConstants.LEFT);
 
 		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
 		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
