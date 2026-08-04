@@ -46,6 +46,14 @@ import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.model.events.AddedEdgesEvent;
+import org.cytoscape.model.events.AddedEdgesListener;
+import org.cytoscape.model.events.AddedNodesEvent;
+import org.cytoscape.model.events.AddedNodesListener;
+import org.cytoscape.model.events.RemovedEdgesEvent;
+import org.cytoscape.model.events.RemovedEdgesListener;
+import org.cytoscape.model.events.RemovedNodesEvent;
+import org.cytoscape.model.events.RemovedNodesListener;
 import org.cytoscape.util.swing.IconManager;
 import org.cytoscape.util.swing.LookAndFeelUtil;
 import org.cytoscape.util.swing.TextIcon;
@@ -57,8 +65,8 @@ import org.cytoscape.work.TaskFactory;
  * @author Adam Treister
  */
 @SuppressWarnings("serial")
-public class ResultsPanel extends JPanel
-       implements CytoPanelComponent2, ActionListener, SetCurrentNetworkListener {
+public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionListener, SetCurrentNetworkListener,
+		AddedNodesListener, AddedEdgesListener, RemovedNodesListener, RemovedEdgesListener {
 
 	final String HEADER_TITLE = "SUMMARY STATISTICS:";
 
@@ -114,9 +122,9 @@ public class ResultsPanel extends JPanel
 			.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
 			.addComponent(footerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
 
-		updateHeader(null);
 		setResultString("");
 
+		update();
 		revalidate();
 		repaint();
 	}
@@ -126,31 +134,55 @@ public class ResultsPanel extends JPanel
 
 
 	@Override
-	public void handleEvent(SetCurrentNetworkEvent scne) {
+	public void handleEvent(SetCurrentNetworkEvent e) {
+		update();
+	}
+	
+	@Override
+	public void handleEvent(AddedEdgesEvent e) {
+		update();
+	}
+
+	@Override
+	public void handleEvent(AddedNodesEvent e) {
+		update();
+	}
+	
+	@Override
+	public void handleEvent(RemovedEdgesEvent e) {
+		update();
+	}
+
+	@Override
+	public void handleEvent(RemovedNodesEvent e) {
+		update();
+	}
+	
+	protected void update() {
 		if (!SwingUtilities.isEventDispatchThread()) {
-			SwingUtilities.invokeLater(() -> handleEvent(scne));
+			SwingUtilities.invokeLater(() -> update());
 			return;
 		}
 
-		network = scne.getNetwork();
+		network = appManager.getCurrentNetwork();
+		updateButtons();
+		
 		NetworkStats st = null;
 		String stats = "No Network Selected";
 
-		updateHeader(st);
-
-		enableButtons(network != null);
 		if (network != null) {
-			if (network.getNodeCount() < 1 || network.getEdgeCount() < 1) {
-				stats = "-- Empty Network --";
-				enableButtons(false);
+			if (network.getNodeCount() < 4 || network.getEdgeCount() < 1) {
+				stats = network.getNodeCount() == 0 ? "-- Empty Network --" : "-- Network Too Small --<br>(must have at least 4 nodes and 1 edge)";
 			} else {
 				CyTable hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
 				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
 				st = parseJson(stats);
 			}
 			if (st == null && stats == null)
-				stats = "-- No statistics found --<br>(run a new analysis to calculate statistics for this network)";
+				stats = "-- No Statistics Found --<br>(run a new analysis to calculate statistics for this network)";
 		}
+		
+		updateHeader(st);
 
 		if (st == null) {
 			setResultString(stats);
@@ -159,14 +191,18 @@ public class ResultsPanel extends JPanel
 		}
 	}
 
-	public void enableButtons(boolean b) {
+	private void updateButtons() {
 		if (!SwingUtilities.isEventDispatchThread()) {
-			SwingUtilities.invokeLater(() -> enableButtons(b));
+			SwingUtilities.invokeLater(() -> updateButtons());
 			return;
 		}
+		
+		int nodeCount = network == null ? 0 : network.getNodeCount();
+		int edgeCount = network == null ? 0 : network.getEdgeCount();
 
-		degreeHisto.setEnabled(b);
-		betweenScatter.setEnabled(b);
+		newAnalysis.setEnabled(nodeCount >= 4 && edgeCount >= 1);
+		degreeHisto.setEnabled(nodeCount > 0 && edgeCount > 0);
+		betweenScatter.setEnabled(nodeCount > 0 && edgeCount > 0);
 	}
 
 	//-----------------------------------------------
@@ -274,8 +310,6 @@ public class ResultsPanel extends JPanel
 		else if (network != null)
 			title = network.getRow(network).get(CyNetwork.NAME, String.class);
 
-		newAnalysis.setEnabled(network != null);
-
 		if (title == null) {
 			networkName.setText("");
 			return;
@@ -305,7 +339,6 @@ public class ResultsPanel extends JPanel
 		
 		degreeHisto = new JButton("Node Degree Distribution", icon);
 		betweenScatter = new JButton("Betweenness by Degree", icon);
-		enableButtons(false);
 		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);
 
 		// By default the icon and the label are centered as a single block, so buttons with
@@ -316,6 +349,8 @@ public class ResultsPanel extends JPanel
 
 		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
 		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
+		
+		updateButtons();
 	}
 
 	private static String escapeHtml(String s) {
@@ -343,7 +378,7 @@ public class ResultsPanel extends JPanel
 		}
 	}
 
-	public void setResults(NetworkStats stats) {
+	private void setResults(NetworkStats stats) {
 		// The analysis runs on a task thread and calls this from NetworkAnalyzer.doOutput(),
 		// so the rebuild below has to be moved onto the EDT. Otherwise the EDT can validate
 		// bodyPanel while the new GroupLayout is half built -- GroupLayout adds a component to
@@ -353,8 +388,6 @@ public class ResultsPanel extends JPanel
 			SwingUtilities.invokeLater(() -> setResults(stats));
 			return;
 		}
-
-		updateHeader(stats);
 
 		bodyPanel.removeAll();
 
@@ -410,7 +443,6 @@ public class ResultsPanel extends JPanel
 		layout.setHorizontalGroup(horizontal);
 		layout.setVerticalGroup(vertical);
 
-		enableButtons(true);
 		revalidate();
 		repaint();
 	}

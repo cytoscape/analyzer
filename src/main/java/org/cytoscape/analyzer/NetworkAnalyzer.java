@@ -114,7 +114,7 @@ public abstract class NetworkAnalyzer {
 				if (comp instanceof ResultsPanel)
 				{
 					var results = (ResultsPanel) comp;
-					results.setResults(stats);
+					results.update();
 					panel.setSelectedIndex(c);
 				}
 			}

@@ -136,24 +136,24 @@ public class AnalyzerManager implements SessionLoadedListener {
 	// create and register the results panel, 
 	// and listen for network change events, so we always show the current network stats
 	boolean isRegistered = false;
-	public void registerResultsPanel()
-	{
-		if (isRegistered) return;
-		registerService(resultsPanel, CytoPanelComponent.class, new Properties());
-		registerService(resultsPanel, SetCurrentNetworkListener.class, new Properties());
-		CytoPanel panel = application.getCytoPanel(CytoPanelName.EAST);
+
+	public void registerResultsPanel() {
+		if (isRegistered)
+			return;
+		
+		registrar.registerAllServices(resultsPanel);
+		resultsPanel.update();
+		var panel = application.getCytoPanel(CytoPanelName.EAST);
 		panel.setState(CytoPanelState.DOCK);
 		isRegistered = true;
-		resultsPanel.enableButtons(true);
 	}
 	
 	// when a session closes, unregister the panel.
-	public void unregisterResultsPanel()
-	{
-		if (!isRegistered) return;
-		unregisterService(resultsPanel, CytoPanelComponent.class);
-		unregisterService(resultsPanel, SetCurrentNetworkListener.class);
-		resultsPanel.enableButtons(false);
+	public void unregisterResultsPanel() {
+		if (!isRegistered)
+			return;
+		
+		registrar.unregisterAllServices(resultsPanel);
 		isRegistered = false;
 	}
 	

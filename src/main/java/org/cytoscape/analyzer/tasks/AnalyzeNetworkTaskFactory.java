@@ -66,9 +66,13 @@ public class AnalyzeNetworkTaskFactory extends AbstractNetworkCollectionTaskFact
 		return new TaskIterator(new AnalyzeNetworkTask(null, reg, app, mgr));
 
 	}
+
 	@Override
 	public boolean isReady() {
-		return true;
+		var appMgr = reg.getService(CyApplicationManager.class);
+		var net = appMgr.getCurrentNetwork();
+		
+		return net != null && net.getNodeCount() > 0 && net.getEdgeCount() > 0;
 	}
 	
 	static public boolean isDirected(final Collection<CyNetwork> networks)
