@@ -1,15 +1,13 @@
 package org.cytoscape.analyzer;
 
 
-import java.awt.Component;
-
 /*
  * #%L
  * Cytoscape NetworkAnalyzer Impl (network-analyzer-impl)
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2006 - 2013
+ * Copyright (C) 2006 - 2026
  *   Max Planck Institute for Informatics, Saarbruecken, Germany
  *   The Cytoscape Consortium
  * %%
@@ -30,22 +28,21 @@ import java.awt.Component;
  */
 
 import java.awt.geom.Point2D;
-
-import org.cytoscape.analyzer.util.NetworkInterpretation;
-import org.cytoscape.analyzer.util.NetworkStats;
-import org.cytoscape.analyzer.util.SumCountPair;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.SwingUtilities;
+
+import org.cytoscape.analyzer.util.NetworkInterpretation;
+import org.cytoscape.analyzer.util.NetworkStats;
+import org.cytoscape.analyzer.util.SumCountPair;
 import org.cytoscape.application.swing.CySwingApplication;
-import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.subnetwork.CySubNetwork;
 
@@ -104,20 +101,24 @@ public abstract class NetworkAnalyzer {
 		hiddenTable.getRow(network.getSUID()).set(columnName, json);
 		
 		
-		// String out = stats.formattedOutput();
-		String out = stats.htmlOutput();
-		CytoPanel panel = desktop.getCytoPanel(CytoPanelName.EAST);
-		panel.setState(CytoPanelState.DOCK);
-		int nPanels = panel.getCytoPanelComponentCount();
-		for (int c = 0; c < nPanels; c++) {
-			Component comp = panel.getComponentAt(c);
-			if (comp instanceof ResultsPanel)
-			{
-				ResultsPanel results = (ResultsPanel) comp;
-				results.setResults(stats);
-				panel.setSelectedIndex(c);
+//		String out = stats.formattedOutput();
+//		String out = stats.htmlOutput();
+
+		// This runs on the analysis task's thread, so hand the panel updates to the EDT
+		SwingUtilities.invokeLater(() -> {
+			var panel = desktop.getCytoPanel(CytoPanelName.EAST);
+			panel.setState(CytoPanelState.DOCK);
+			int nPanels = panel.getCytoPanelComponentCount();
+			for (int c = 0; c < nPanels; c++) {
+				var comp = panel.getComponentAt(c);
+				if (comp instanceof ResultsPanel)
+				{
+					var results = (ResultsPanel) comp;
+					results.setResults(stats);
+					panel.setSelectedIndex(c);
+				}
 			}
-		}
+		});
 	}
 
 	/**

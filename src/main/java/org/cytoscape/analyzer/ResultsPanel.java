@@ -31,6 +31,7 @@ import javax.swing.JViewport;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -126,6 +127,11 @@ public class ResultsPanel extends JPanel
 
 	@Override
 	public void handleEvent(SetCurrentNetworkEvent scne) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> handleEvent(scne));
+			return;
+		}
+
 		network = scne.getNetwork();
 		NetworkStats st = null;
 		String stats = "No Network Selected";
@@ -154,6 +160,11 @@ public class ResultsPanel extends JPanel
 	}
 
 	public void enableButtons(boolean b) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> enableButtons(b));
+			return;
+		}
+
 		degreeHisto.setEnabled(b);
 		betweenScatter.setEnabled(b);
 	}
@@ -324,6 +335,16 @@ public class ResultsPanel extends JPanel
 	}
 
 	public void setResults(NetworkStats stats) {
+		// The analysis runs on a task thread and calls this from NetworkAnalyzer.doOutput(),
+		// so the rebuild below has to be moved onto the EDT. Otherwise the EDT can validate
+		// bodyPanel while the new GroupLayout is half built -- GroupLayout adds a component to
+		// the container as soon as it joins a group, so a layout query made before
+		// setHorizontalGroup() fails with "is not attached to a horizontal group".
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> setResults(stats));
+			return;
+		}
+
 		updateHeader(stats);
 
 		bodyPanel.removeAll();
@@ -480,6 +501,12 @@ public class ResultsPanel extends JPanel
 	}
 
 	private void setResultString(String out) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			final String text = out;
+			SwingUtilities.invokeLater(() -> setResultString(text));
+			return;
+		}
+
 		bodyPanel.removeAll();
 		
 		if (out != null)
