@@ -349,8 +349,6 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 
 		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
 		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
-		
-		updateButtons();
 	}
 
 	private static String escapeHtml(String s) {
