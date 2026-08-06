@@ -172,14 +172,14 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 
 		if (network != null) {
 			if (network.getNodeCount() < 4 || network.getEdgeCount() < 1) {
-				stats = network.getNodeCount() == 0 ? "-- Empty Network --" : "-- Network Too Small --<br>(must have at least 4 nodes and 1 edge)";
+				stats = network.getNodeCount() == 0 ? "Empty Network" : "Network Too Small<br>(must have at least 4 nodes and 1 edge)";
 			} else {
 				var hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
 				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
 				st = parseJson(stats);
 			}
 			if (st == null && stats == null)
-				stats = "-- No Statistics Found --<br>(run a new analysis to calculate statistics for this network)";
+				stats = "No Statistics Found<br>(run a new analysis to calculate statistics for this network)";
 		}
 		
 		updateHeader(st);
