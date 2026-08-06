@@ -314,6 +314,30 @@ public class Msgs {
 //	}
 
 	/**
+	 * Checks whether a node attribute is computed only when the network is interpreted as undirected.
+	 *
+	 * @param aName
+	 *            Name of the node attribute to inspect.
+	 * @return <code>true</code> if only an undirected analysis produces the given attribute;
+	 *         <code>false</code> otherwise.
+	 */
+	public static boolean isUndirectedOnlyAttr(String aName) {
+		return undirNodeAttributes.contains(aName) && !dirNodeAttributes.contains(aName);
+	}
+
+	/**
+	 * Checks whether a node attribute is computed only when the network is interpreted as directed.
+	 *
+	 * @param aName
+	 *            Name of the node attribute to inspect.
+	 * @return <code>true</code> if only a directed analysis produces the given attribute;
+	 *         <code>false</code> otherwise.
+	 */
+	public static boolean isDirectedOnlyAttr(String aName) {
+		return dirNodeAttributes.contains(aName) && !undirNodeAttributes.contains(aName);
+	}
+
+	/**
 	 * Constructs a two-line message for an HTML label.
 	 * 
 	 * @param aLine1

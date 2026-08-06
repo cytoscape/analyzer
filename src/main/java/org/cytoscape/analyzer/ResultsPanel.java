@@ -16,6 +16,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -45,10 +46,15 @@ import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.swing.CytoPanelComponent2;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.model.events.AddedEdgesEvent;
 import org.cytoscape.model.events.AddedEdgesListener;
 import org.cytoscape.model.events.AddedNodesEvent;
 import org.cytoscape.model.events.AddedNodesListener;
+import org.cytoscape.model.events.ColumnCreatedEvent;
+import org.cytoscape.model.events.ColumnCreatedListener;
+import org.cytoscape.model.events.ColumnDeletedEvent;
+import org.cytoscape.model.events.ColumnDeletedListener;
 import org.cytoscape.model.events.RemovedEdgesEvent;
 import org.cytoscape.model.events.RemovedEdgesListener;
 import org.cytoscape.model.events.RemovedNodesEvent;
@@ -65,12 +71,21 @@ import org.cytoscape.work.TaskFactory;
  */
 @SuppressWarnings("serial")
 public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionListener, SetCurrentNetworkListener,
-		AddedNodesListener, AddedEdgesListener, RemovedNodesListener, RemovedEdgesListener {
+		AddedNodesListener, AddedEdgesListener, RemovedNodesListener, RemovedEdgesListener,
+		ColumnCreatedListener, ColumnDeletedListener {
 
 	final String HEADER_TITLE = "SUMMARY STATISTICS:";
 
 	/** Service filter used to look up the task factory behind the "New Analysis..." button. */
 	private static final String ANALYZE_FACTORY_FILTER = "(id=analyzeNetworkTaskFactory)";
+
+	/**
+	 * Node columns each chart button plots. CyPlot reads them from the network's default node
+	 * table and throws a NullPointerException when one is missing, so a button whose columns
+	 * are not all there has to stay disabled.
+	 */
+	private static final String[] DEGREE_HISTO_COLUMNS = { Msgs.getAttr("deg") };
+	private static final String[] BETWEEN_SCATTER_COLUMNS = { Msgs.getAttr("deg"), Msgs.getAttr("nbt") };
 
 	private static final String[] EXTRA_INFO = {
 		"Node specific statistics are found in the Node Table.",
@@ -157,7 +172,27 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	public void handleEvent(RemovedNodesEvent e) {
 		update();
 	}
-	
+
+	// A column the charts need can appear or disappear without the network itself changing --
+	// through an analysis, a table import or a column deletion -- so the chart buttons have to
+	// be re-evaluated when that happens.
+	@Override
+	public void handleEvent(ColumnCreatedEvent e) {
+		if (isCurrentNodeTable(e.getSource()))
+			updateButtons();
+	}
+
+	@Override
+	public void handleEvent(ColumnDeletedEvent e) {
+		if (isCurrentNodeTable(e.getSource()))
+			updateButtons();
+	}
+
+	private boolean isCurrentNodeTable(CyTable table) {
+		var current = appManager.getCurrentNetwork();
+		return current != null && table != null && table.equals(current.getDefaultNodeTable());
+	}
+
 	protected void update() {
 		if (!SwingUtilities.isEventDispatchThread()) {
 			SwingUtilities.invokeLater(() -> update());
@@ -201,8 +236,62 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		int edgeCount = network == null ? 0 : network.getEdgeCount();
 
 		newAnalysis.setEnabled(nodeCount >= 4 && edgeCount >= 1);
-		degreeHisto.setEnabled(nodeCount > 0 && edgeCount > 0);
-		betweenScatter.setEnabled(nodeCount > 0 && edgeCount > 0);
+
+		boolean hasData = nodeCount > 0 && edgeCount > 0;
+		updateChartButton(degreeHisto, hasData, DEGREE_HISTO_COLUMNS);
+		updateChartButton(betweenScatter, hasData, BETWEEN_SCATTER_COLUMNS);
+	}
+
+	/**
+	 * Enables a chart button only when the network has something to plot <i>and</i> every node
+	 * column the chart passes to CyPlot is present. The columns can be there without the results
+	 * being in memory -- a network imported after a previous session keeps them -- which is why
+	 * this looks at the table rather than at the statistics.
+	 */
+	private void updateChartButton(JButton button, boolean hasData, String[] columns) {
+		var missing = getMissingColumns(columns);
+
+		button.setEnabled(hasData && missing.isEmpty());
+
+		if (hasData && !missing.isEmpty()) {
+			boolean plural = missing.size() > 1;
+			button.setToolTipText("<html>Requires the node column" + (plural ? "s " : " ") + "\""
+					+ String.join("\" and \"", missing) + "\".<br>Run a new " + getInterpretationHint(missing)
+					+ "analysis to compute " + (plural ? "them" : "it") + ".</html>");
+		} else {
+			button.setToolTipText(null);
+		}
+	}
+
+	/**
+	 * Names the interpretation the user has to pick, when only one of the two produces the missing
+	 * columns -- "Degree", for one, comes out of an undirected analysis only, so an unqualified
+	 * "run a new analysis" would send the user back to a directed run that cannot create it.
+	 * Empty when either interpretation would do, or when no single run can produce them all.
+	 */
+	private static String getInterpretationHint(List<String> missing) {
+		boolean undirected = missing.stream().anyMatch(Msgs::isUndirectedOnlyAttr);
+		boolean directed = missing.stream().anyMatch(Msgs::isDirectedOnlyAttr);
+
+		if (undirected && !directed)
+			return "undirected ";
+		if (directed && !undirected)
+			return "directed ";
+
+		return "";
+	}
+
+	/** Names of the given columns that the current network's default node table does not have. */
+	private List<String> getMissingColumns(String[] columns) {
+		var table = network == null ? null : network.getDefaultNodeTable();
+		var missing = new ArrayList<String>();
+
+		for (String name : columns) {
+			if (table == null || table.getColumn(name) == null)
+				missing.add(name);
+		}
+
+		return missing;
 	}
 
 	//-----------------------------------------------
