@@ -114,6 +114,7 @@ public class Msgs {
 		dirNodeAttributes.add("Indegree");
 		dirNodeAttributes.add("Outdegree");
 		dirNodeAttributes.add("EdgeCount");
+		dirNodeAttributes.add("Degree"); // Total degree (in + out). Duplicates EdgeCount, so that "Degree" means the same thing
 		dirNodeAttributes.add("IsSingleNode");
 		dirNodeAttributes.add("SelfLoops");
 		dirNodeAttributes.add("PartnerOfMultiEdgedNodePairs");

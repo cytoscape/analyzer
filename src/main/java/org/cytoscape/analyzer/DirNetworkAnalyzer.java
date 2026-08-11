@@ -299,6 +299,11 @@ public class DirNetworkAnalyzer extends NetworkAnalyzer {
 					nodeRow.set(Msgs.getAttr("din"), inCyEdges.size());
 					nodeRow.set(Msgs.getAttr("dou"), outCyEdges.size());
 					nodeRow.set(Msgs.getAttr("dal"), inCyEdges.size() + outCyEdges.size());
+					// Total degree, i.e. in-degree + out-degree, which is the same number as
+					// EdgeCount above. It is stored again under the name the undirected analysis
+					// uses, so that anything reading "Degree" -- the charts, in particular --
+					// works the same way whichever interpretation was analyzed.
+					nodeRow.set(Msgs.getAttr("deg"), inCyEdges.size() + outCyEdges.size());
 					nodeRow.set(Msgs.getAttr("isn"), (neighborCount == 0));
 					nodeRow.set(Msgs.getAttr("slo"), selfloops);
 					nodeRow.set(Msgs.getAttr("pmn"), partnerOfMultiEdgeNodePairs);
