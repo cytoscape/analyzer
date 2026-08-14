@@ -101,7 +101,6 @@ public class Msgs {
 		nodeAttributes.put("pmn", "PartnerOfMultiEdgedNodePairs");
 		nodeAttributes.put("din", "Indegree");
 		nodeAttributes.put("dou", "Outdegree");
-		nodeAttributes.put("dal", "EdgeCount");
 		nodeAttributes.put("nbt", "BetweennessCentrality");
 		nodeAttributes.put("rad", "Radiality");
 		nodeAttributes.put("stress", "Stress");
@@ -113,8 +112,7 @@ public class Msgs {
 		dirNodeAttributes.add("ClusteringCoefficient");
 		dirNodeAttributes.add("Indegree");
 		dirNodeAttributes.add("Outdegree");
-		dirNodeAttributes.add("EdgeCount");
-		dirNodeAttributes.add("Degree"); // Total degree (in + out). Duplicates EdgeCount, so that "Degree" means the same thing
+		dirNodeAttributes.add("Degree"); // Total degree, i.e. in-degree + out-degree
 		dirNodeAttributes.add("IsSingleNode");
 		dirNodeAttributes.add("SelfLoops");
 		dirNodeAttributes.add("PartnerOfMultiEdgedNodePairs");

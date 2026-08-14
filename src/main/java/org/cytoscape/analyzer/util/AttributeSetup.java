@@ -35,7 +35,6 @@ final public class AttributeSetup {
 
 	public static void createDirectedNodeAttributes(CyTable nodeTable) {
 		createCommonNodeAttributes(nodeTable);
-		createAttr(nodeTable,Msgs.getAttr("dal"), Integer.class);
 		createAttr(nodeTable,Msgs.getAttr("deg"), Integer.class);
 		createAttr(nodeTable,Msgs.getAttr("din"), Integer.class);
 		createAttr(nodeTable,Msgs.getAttr("dou"), Integer.class);

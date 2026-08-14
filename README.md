@@ -1,7 +1,7 @@
 # analyzer
 
 
-Analyzer is a scriptable version of the core app: Network Analyzer. It provides the functionality to execute algorithms to compute shortest paths, centrality measurements, self-loops, clustering coefficients, etc. for both directed and undirected graphs. Directed graphs show separate inward and outward degrees, as well as the combined Edge Count.
+Analyzer is a scriptable version of the core app: Network Analyzer. It provides the functionality to execute algorithms to compute shortest paths, centrality measurements, self-loops, clustering coefficients, etc. for both directed and undirected graphs. Directed graphs show separate inward and outward degrees, as well as the combined Degree.
 
 Analyzer omits the display of graphs to show distributions and scatter plots. This functionality is provided in a new app, cyChart, which augments the graph functionality with the ability to create filters interactively.
 
