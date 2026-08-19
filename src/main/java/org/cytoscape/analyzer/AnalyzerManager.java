@@ -50,8 +50,12 @@ public class AnalyzerManager implements SessionLoadedListener {
 		unregisterResultsPanel();
 	}
 	
-	public void makeDegreeHisto() {
-		if (NetworkAnalyzer.verbose) 	System.out.println("makeDegreeHisto");
+	/**
+	 * @param degreeColumn Node column to plot: <i>Degree</i> for undirected results, or the
+	 *        <i>Indegree</i>/<i>Outdegree</i> the user picked for directed ones.
+	 */
+	public void makeDegreeHisto(String degreeColumn) {
+		if (NetworkAnalyzer.verbose) 	System.out.println("makeDegreeHisto: " + degreeColumn);
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
@@ -66,7 +70,7 @@ public class AnalyzerManager implements SessionLoadedListener {
 			public void taskFinished(ObservableTask task) {}
 			@Override
 			public void allFinished(FinishStatus finishStatus) {
-				args.put("xCol","Degree");
+				args.put("xCol",degreeColumn);
 				TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
 				taskManager.execute(ti);
 			 		}
@@ -76,14 +80,18 @@ public class AnalyzerManager implements SessionLoadedListener {
 				return;
 			}	
 		} else {
-			args.put("xCol","Degree");
+			args.put("xCol",degreeColumn);
 			TaskIterator ti = commandTF.createTaskIterator("cyplot","histogram",args, null);
 			taskManager.execute(ti);
 		}
 	}
 	
-	public void makeBetweenScatter() {
-		if (NetworkAnalyzer.verbose) 	System.out.println("makeBetweenScatter");
+	/**
+	 * @param degreeColumn Node column for the x axis: <i>Degree</i> for undirected results, or the
+	 *        <i>Indegree</i>/<i>Outdegree</i> the user picked for directed ones.
+	 */
+	public void makeBetweenScatter(String degreeColumn) {
+		if (NetworkAnalyzer.verbose) 	System.out.println("makeBetweenScatter: " + degreeColumn);
 		CommandExecutorTaskFactory commandTF = registrar.getService(CommandExecutorTaskFactory.class);
 		TaskManager<?,?> taskManager = registrar.getService(TaskManager.class);
 		Map<String, Object> args = new HashMap<>();
@@ -98,7 +106,7 @@ public class AnalyzerManager implements SessionLoadedListener {
 			public void taskFinished(ObservableTask task) {}
 			@Override
 			public void allFinished(FinishStatus finishStatus) {
-				args.put("xCol","Degree");
+				args.put("xCol",degreeColumn);
 				args.put("yCol","BetweennessCentrality");
 				TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
 				taskManager.execute(ti);
@@ -109,7 +117,7 @@ public class AnalyzerManager implements SessionLoadedListener {
 				return;
 			}
 		} else {
-			args.put("xCol","Degree");
+			args.put("xCol",degreeColumn);
 			args.put("yCol","BetweennessCentrality");
 			TaskIterator ti = commandTF.createTaskIterator("cyplot","scatter",args, null);
 			taskManager.execute(ti);

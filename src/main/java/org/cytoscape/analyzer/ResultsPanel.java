@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.ParallelGroup;
 import javax.swing.GroupLayout.SequentialGroup;
@@ -26,6 +29,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
@@ -79,13 +83,21 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	/** Service filter used to look up the task factory behind the "New Analysis..." button. */
 	private static final String ANALYZE_FACTORY_FILTER = "(id=analyzeNetworkTaskFactory)";
 
+	/** The y axis of the scatter chart. Both interpretations compute it. */
+	private static final String BETWEENNESS_COLUMN = Msgs.getAttr("nbt");
+
+	/** Degree column the charts use for undirected results, where there is nothing to choose. */
+	private static final String TOTAL_DEGREE_COLUMN = Msgs.getAttr("deg");
+
+	/** The two degree columns a directed analysis lets the user pick between. */
+	private static final String IN_DEGREE_COLUMN = Msgs.getAttr("din");
+	private static final String OUT_DEGREE_COLUMN = Msgs.getAttr("dou");
+
 	/**
-	 * Node columns each chart button plots. CyPlot reads them from the network's default node
-	 * table and throws a NullPointerException when one is missing, so a button whose columns
-	 * are not all there has to stay disabled.
+	 * Columns only a directed analysis produces, used to recognize directed results on a network
+	 * whose statistics are not in this session.
 	 */
-	private static final String[] DEGREE_HISTO_COLUMNS = { Msgs.getAttr("deg") };
-	private static final String[] BETWEEN_SCATTER_COLUMNS = { Msgs.getAttr("deg"), Msgs.getAttr("nbt") };
+	private static final String[] DIRECTED_ONLY_COLUMNS = { IN_DEGREE_COLUMN, OUT_DEGREE_COLUMN };
 
 	private static final String[] EXTRA_INFO = {
 		"Node specific statistics are found in the Node Table.",
@@ -99,9 +111,15 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	private JButton newAnalysis;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
+	private JPanel degreeChoicePanel;
+	private JRadioButton inDegreeChoice;
+	private JRadioButton outDegreeChoice;
 	private BodyPanel bodyPanel;
 
 	private CyNetwork network;
+
+	/** Whether the results shown come from a directed analysis, which is what offers the choice. */
+	private boolean directedResults;
 
 	public ResultsPanel(final AnalyzerManager manager) {
 		this.manager = manager;
@@ -209,8 +227,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 			if (network.getNodeCount() < 4 || network.getEdgeCount() < 1) {
 				stats = network.getNodeCount() == 0 ? "Empty Network" : "Network Too Small<br>(must have at least 4 nodes and 1 edge)";
 			} else {
-				var hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
-				stats = hiddenTable.getRow(network.getSUID()).get("statistics", String.class);
+				stats = getStoredStatistics();
 				st = parseJson(stats);
 			}
 			if (st == null && stats == null)
@@ -237,9 +254,59 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 
 		newAnalysis.setEnabled(nodeCount >= 4 && edgeCount >= 1);
 
+		boolean wasDirected = directedResults;
+		directedResults = isDirectedResult();
+		degreeChoicePanel.setVisible(directedResults);
+
+		// Undirected results plot Degree whatever the radio buttons say, so the labels follow
+		// the interpretation as well as the choice
+		if (wasDirected != directedResults)
+			updateChartButtonLabels();
+
+		String degreeColumn = getDegreeColumn();
 		boolean hasData = nodeCount > 0 && edgeCount > 0;
-		updateChartButton(degreeHisto, hasData, DEGREE_HISTO_COLUMNS);
-		updateChartButton(betweenScatter, hasData, BETWEEN_SCATTER_COLUMNS);
+
+		updateChartButton(degreeHisto, hasData, new String[] { degreeColumn });
+		updateChartButton(betweenScatter, hasData, new String[] { degreeColumn, BETWEENNESS_COLUMN });
+
+		revalidate();
+		repaint();
+	}
+
+	/**
+	 * Whether the results on the current network come from a directed analysis. The stored
+	 * statistics say so outright and are the authority, since a network re-analyzed under the
+	 * other interpretation keeps the columns of both. Without them -- a network imported with the
+	 * columns of an analysis run in another session -- the directed-only columns are the evidence.
+	 */
+	private boolean isDirectedResult() {
+		if (network == null)
+			return false;
+
+		var stats = parseJson(getStoredStatistics());
+		var title = stats == null ? null : (String)stats.get("networkTitle");
+
+		if (title != null) {
+			if (title.endsWith(Msgs.DT_DIRECTED))
+				return true;
+			if (title.endsWith(Msgs.DT_UNDIRECTED))
+				return false;
+		}
+
+		return getMissingColumns(DIRECTED_ONLY_COLUMNS).isEmpty();
+	}
+
+	/** The statistics the last analysis stored on the network, or null if it has none. */
+	private String getStoredStatistics() {
+		if (network == null)
+			return null;
+
+		var hiddenTable = network.getTable(CyNetwork.class, CyNetwork.HIDDEN_ATTRS);
+		if (hiddenTable == null)
+			return null;
+
+		var row = hiddenTable.getRow(network.getSUID());
+		return row == null ? null : row.get("statistics", String.class);
 	}
 
 	/**
@@ -355,7 +422,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	}
 
 	/**
-	 * Footer holding the chart buttons, stacked and centered.
+	 * Footer holding the degree choice and the chart buttons, stacked and centered.
 	 */
 	private JPanel createFooterPanel() {
 		var panel = new JPanel();
@@ -366,16 +433,19 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		layout.setAutoCreateContainerGaps(true);
 		layout.setAutoCreateGaps(!LookAndFeelUtil.isAquaLAF());
 
-		// Stacked and centered. They are the same size thanks to equalizeSize(), and are
+		// Stacked and centered. The buttons are the same size thanks to equalizeSize(), and are
 		// allowed to shrink so that this row does not dictate a minimum width for the whole
-		// panel, which would clip the statistics when the CytoPanel is narrow.
+		// panel, which would clip the statistics when the CytoPanel is narrow. GroupLayout
+		// honors visibility by default, so the hidden degree choice takes no room.
 		layout.setHorizontalGroup(layout.createSequentialGroup()
 			.addGap(0, 0, Short.MAX_VALUE)
 			.addGroup(layout.createParallelGroup(CENTER, true)
+				.addComponent(degreeChoicePanel, 0, PREFERRED_SIZE, PREFERRED_SIZE)
 				.addComponent(degreeHisto, 0, PREFERRED_SIZE, PREFERRED_SIZE)
 				.addComponent(betweenScatter, 0, PREFERRED_SIZE, PREFERRED_SIZE))
 			.addGap(0, 0, Short.MAX_VALUE));
 		layout.setVerticalGroup(layout.createSequentialGroup()
+			.addComponent(degreeChoicePanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addComponent(degreeHisto)
 			.addComponent(betweenScatter));
 
@@ -425,10 +495,9 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	private void createChartButtons() {
 		var iconManager = manager.getService(IconManager.class);
 		var icon = new TextIcon(IconManager.ICON_BAR_CHART, iconManager.getIconFont(18.0f), 24, 24);
-		
-		degreeHisto = new JButton("Node Degree Distribution", icon);
-		betweenScatter = new JButton("Betweenness by Degree", icon);
-		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);
+
+		degreeHisto = new JButton(icon);
+		betweenScatter = new JButton(icon);
 
 		// By default the icon and the label are centered as a single block, so buttons with
 		// different text lengths put their icons at different offsets. Anchoring the content
@@ -436,8 +505,73 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		degreeHisto.setHorizontalAlignment(SwingConstants.LEFT);
 		betweenScatter.setHorizontalAlignment(SwingConstants.LEFT);
 
-		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto());
-		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter());
+		degreeHisto.addActionListener(evt -> manager.makeDegreeHisto(getDegreeColumn()));
+		betweenScatter.addActionListener(evt -> manager.makeBetweenScatter(getDegreeColumn()));
+
+		degreeChoicePanel = createDegreeChoicePanel();
+		updateChartButtonLabels();
+	}
+
+	/**
+	 * A directed analysis computes in-degree and out-degree separately, and either can be the one
+	 * worth plotting, so the user picks. Only shown for directed results: an undirected analysis
+	 * has the single <i>Degree</i> column and nothing to choose between.
+	 */
+	private JPanel createDegreeChoicePanel() {
+		inDegreeChoice = new JRadioButton(IN_DEGREE_COLUMN);
+		outDegreeChoice = new JRadioButton(OUT_DEGREE_COLUMN);
+		outDegreeChoice.setSelected(true);
+
+		var group = new ButtonGroup();
+		group.add(inDegreeChoice);
+		group.add(outDegreeChoice);
+
+		LookAndFeelUtil.makeSmall(inDegreeChoice, outDegreeChoice);
+
+		// The choice changes both what the buttons plot and which column has to be there, so the
+		// labels and the enabled state are rebuilt together
+		ActionListener onChoice = evt -> {
+			updateChartButtonLabels();
+			updateButtons();
+		};
+		inDegreeChoice.addActionListener(onChoice);
+		outDegreeChoice.addActionListener(onChoice);
+
+		var panel = new JPanel();
+		panel.setOpaque(false);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
+		panel.add(inDegreeChoice);
+		panel.add(Box.createHorizontalStrut(8));
+		panel.add(outDegreeChoice);
+		panel.setVisible(false); // updateButtons() shows it once the results are known to be directed
+
+		return panel;
+	}
+
+	/** The degree column the charts plot: the user's pick for directed results, else Degree. */
+	private String getDegreeColumn() {
+		if (!directedResults)
+			return TOTAL_DEGREE_COLUMN;
+
+		return inDegreeChoice.isSelected() ? IN_DEGREE_COLUMN : OUT_DEGREE_COLUMN;
+	}
+
+	/** Names the buttons after the column they actually plot. */
+	private void updateChartButtonLabels() {
+		String column = getDegreeColumn();
+
+		degreeHisto.setText("Node " + column + " Distribution");
+		betweenScatter.setText("Betweenness by " + column);
+
+		// equalizeSize() pins explicit sizes on both buttons, which would keep them at the width
+		// of the previous labels, so they have to be released before measuring the new text
+		for (JButton button : new JButton[] { degreeHisto, betweenScatter }) {
+			button.setMinimumSize(null);
+			button.setPreferredSize(null);
+			button.setMaximumSize(null);
+		}
+
+		LookAndFeelUtil.equalizeSize(degreeHisto, betweenScatter);
 	}
 
 	private static String escapeHtml(String s) {
