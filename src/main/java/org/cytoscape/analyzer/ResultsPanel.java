@@ -31,6 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -111,6 +112,9 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	private JButton newAnalysis;
 	private JButton degreeHisto;
 	private JButton betweenScatter;
+	private JButton helpButton;
+	private JButton aboutButton;
+	private JButton closeButton;
 	private JPanel degreeChoicePanel;
 	private JRadioButton inDegreeChoice;
 	private JRadioButton outDegreeChoice;
@@ -121,7 +125,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	/** Whether the results shown come from a directed analysis, which is what offers the choice. */
 	private boolean directedResults;
 
-	public ResultsPanel(final AnalyzerManager manager) {
+	public ResultsPanel(AnalyzerManager manager) {
 		this.manager = manager;
 		this.appManager = manager.getService(CyApplicationManager.class);
 		this.network = appManager.getCurrentNetwork();
@@ -430,24 +434,50 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 
 		var layout = new GroupLayout(panel);
 		panel.setLayout(layout);
-		layout.setAutoCreateContainerGaps(true);
+		layout.setAutoCreateContainerGaps(false);
 		layout.setAutoCreateGaps(!LookAndFeelUtil.isAquaLAF());
 
+		var sep = new JSeparator(SwingConstants.HORIZONTAL);
+		
 		// Stacked and centered. The buttons are the same size thanks to equalizeSize(), and are
 		// allowed to shrink so that this row does not dictate a minimum width for the whole
 		// panel, which would clip the statistics when the CytoPanel is narrow. GroupLayout
 		// honors visibility by default, so the hidden degree choice takes no room.
-		layout.setHorizontalGroup(layout.createSequentialGroup()
-			.addGap(0, 0, Short.MAX_VALUE)
-			.addGroup(layout.createParallelGroup(CENTER, true)
-				.addComponent(degreeChoicePanel, 0, PREFERRED_SIZE, PREFERRED_SIZE)
-				.addComponent(degreeHisto, 0, PREFERRED_SIZE, PREFERRED_SIZE)
-				.addComponent(betweenScatter, 0, PREFERRED_SIZE, PREFERRED_SIZE))
-			.addGap(0, 0, Short.MAX_VALUE));
+		layout.setHorizontalGroup(layout.createParallelGroup(CENTER, true)
+			.addGroup(layout.createSequentialGroup()
+				.addContainerGap()
+				.addGap(0, 0, Short.MAX_VALUE)
+				.addGroup(layout.createParallelGroup(CENTER, true)
+					.addComponent(degreeChoicePanel, 0, PREFERRED_SIZE, PREFERRED_SIZE)
+					.addComponent(degreeHisto, 0, PREFERRED_SIZE, PREFERRED_SIZE)
+					.addComponent(betweenScatter, 0, PREFERRED_SIZE, PREFERRED_SIZE))
+				.addGap(0, 0, Short.MAX_VALUE)
+				.addContainerGap()
+			)
+			.addComponent(sep, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+			.addGroup(layout.createSequentialGroup()
+				.addContainerGap()
+				.addComponent(getHelpButton(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addComponent(getAboutButton(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+				.addGap(0, 0, Short.MAX_VALUE)
+				.addComponent(getCloseButton(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+				.addContainerGap()
+			)
+		);
 		layout.setVerticalGroup(layout.createSequentialGroup()
+			.addContainerGap()
 			.addComponent(degreeChoicePanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addComponent(degreeHisto)
-			.addComponent(betweenScatter));
+			.addComponent(betweenScatter)
+			.addComponent(sep, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			.addGroup(layout.createParallelGroup(CENTER)
+				.addComponent(getHelpButton())
+				.addComponent(getAboutButton())
+				.addComponent(getCloseButton())
+			)
+			.addContainerGap()
+		);
 
 		return panel;
 	}
@@ -511,7 +541,32 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		degreeChoicePanel = createDegreeChoicePanel();
 		updateChartButtonLabels();
 	}
-
+	
+	private JButton getHelpButton() {
+		if (helpButton == null) {
+			helpButton = LookAndFeelUtil.createHelpButton("https://manual.cytoscape.org/en/stable/Network_Analyzer.html");
+			helpButton.setToolTipText("Online Help...");
+		}
+		
+		return helpButton;
+	}
+	
+	protected JButton getAboutButton() {
+		if (aboutButton == null) {
+			aboutButton = new JButton("About");
+		}
+		
+		return aboutButton;
+	}
+	
+	protected JButton getCloseButton() {
+		if (closeButton == null) {
+			closeButton = new JButton("Close");
+		}
+		
+		return closeButton;
+	}
+	
 	/**
 	 * A directed analysis computes in-degree and out-degree separately, and either can be the one
 	 * worth plotting, so the user picks. Only shown for directed results: an undirected analysis

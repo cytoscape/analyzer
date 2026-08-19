@@ -1,10 +1,13 @@
 package org.cytoscape.analyzer;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelName;
@@ -25,10 +28,12 @@ public class AnalyzerManager implements SessionLoadedListener {
 
 	final private TaskManager<?, ?> taskManager;
 	final private CyServiceRegistrar registrar; 
-	final private HashMap<String, String> settings;
 	final private CySwingApplication application;
 	private AvailableCommands availableCommands;
+	
+	private final Properties props;
 
+	private AboutDialog aboutDialog;
 	private ResultsPanel resultsPanel;
 
 	public AnalyzerManager(CyServiceRegistrar reg, CySwingApplication desktop) {
@@ -36,9 +41,11 @@ public class AnalyzerManager implements SessionLoadedListener {
 		taskManager = registrar.getService(TaskManager.class);
 		availableCommands = registrar.getService(AvailableCommands.class);
 		application = desktop;
-		settings = new HashMap<String, String>();
+		props = loadProperties("/analyzer.properties");
 		
 		resultsPanel = new ResultsPanel(this);
+		resultsPanel.getAboutButton().addActionListener(e -> showAboutDialog());
+		resultsPanel.getCloseButton().addActionListener(e -> unregisterResultsPanel());
 	}
 
 	private boolean isCyplotInstalled() {
@@ -161,13 +168,10 @@ public class AnalyzerManager implements SessionLoadedListener {
 		isRegistered = false;
 	}
 	
-	public String getSetting(String setting) {		return settings.get(setting);	}
-
-	public void setSetting(String setting, double value) {		setSetting(setting, String.valueOf(value));	}
-	public void setSetting(String setting, int value) 	{		setSetting(setting, String.valueOf(value));	}
-	public void setSetting(String setting, boolean value) {		setSetting(setting, String.valueOf(value));	}
-	public void setSetting(String setting, String value) { 		settings.put(setting, value);	}
-
+	public String getProperty(String key) {
+		return props.getProperty(key);
+	}
+	
 	public void executeCommand(String namespace, String command, Map<String, Object> args, boolean synchronous) {
 		executeCommand(namespace, command, args, null, synchronous);
 	}
@@ -211,7 +215,53 @@ public class AnalyzerManager implements SessionLoadedListener {
 	public void unregisterService(Object service, Class<?> serviceClass) {
 		registrar.unregisterService(service, serviceClass);
 	}
+	
+	/**
+	 * Returns true if the current operating system is Mac OS X.
+	 * @return true if the current OS is Mac OS X and false otherwise.
+	 */
+	public static boolean isMac() {
+		return System.getProperty("os.name").startsWith("Mac OS X");
+	}
+	
+	private void showAboutDialog() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> showAboutDialog());
+			return;
+		}
+		
+		if (aboutDialog == null) {
+			aboutDialog = new AboutDialog(SwingUtilities.getWindowAncestor(resultsPanel), this, registrar);
+			
+			if (isMac()) // Workaround for bug: https://bugs.openjdk.java.net/browse/JDK-8182638
+				aboutDialog.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowActivated(WindowEvent evt) {
+						evt.getWindow().toFront();
+					}
+				});
+		}
 
+		if (!aboutDialog.isVisible()) {
+			aboutDialog.setLocationRelativeTo(null);
+			aboutDialog.setVisible(true);
+		}
+	}
 
+	private static Properties loadProperties(String name) {
+		var props = new Properties();
 
+		try {
+			var in = CyActivator.class.getResourceAsStream(name);
+
+			if (in != null) {
+				props.load(in);
+				in.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return props;
+	}
 }

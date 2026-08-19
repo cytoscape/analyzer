@@ -7,6 +7,8 @@
 		<bundle.namespace>org.cytoscape.analyzer</bundle.namespace>
 		<cytoscape.api.version>3.10.0</cytoscape.api.version>
 		<osgi.api.version>6.0.0</osgi.api.version>
+		<maven.build.timestamp.format>MMMM yyyy</maven.build.timestamp.format>
+		<buildDate>${maven.build.timestamp}</buildDate>
 
 		<!-- Maven Plugin Settings -->
 		<junit.version>4.12</junit.version>
@@ -77,6 +79,22 @@
 	</repositories>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -112,6 +130,25 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-surefire-plugin.version}</version>
 			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <configuration>
+                            <target>
+                                <!-- Will run build.xml in same folder -->
+                                <ant dir="./" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 
