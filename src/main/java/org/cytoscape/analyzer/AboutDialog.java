@@ -89,7 +89,6 @@ public class AboutDialog extends JDialog {
 					+ "<p align='center'>"
 					+ "<span style='font-size:small;'><b>version " + version + "</b>"
 					+ " (" + buildDate + ")<BR>"
-					+ "A Cytoscape App</span>"
 					+ "</p><BR>"
 					
 					+ "<hr size='4' noshade>"

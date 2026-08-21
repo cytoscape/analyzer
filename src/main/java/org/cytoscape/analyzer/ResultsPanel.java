@@ -15,6 +15,9 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +26,9 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.ParallelGroup;
-import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -41,10 +43,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.View;
 
 import org.cytoscape.analyzer.util.IconUtil;
 import org.cytoscape.analyzer.util.Msgs;
 import org.cytoscape.analyzer.util.NetworkStats;
+import org.cytoscape.analyzer.util.StatsDoc;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.events.SetCurrentNetworkEvent;
 import org.cytoscape.application.events.SetCurrentNetworkListener;
@@ -69,11 +73,6 @@ import org.cytoscape.util.swing.LookAndFeelUtil;
 import org.cytoscape.util.swing.TextIcon;
 import org.cytoscape.work.TaskFactory;
 
-
-/**
- * Displays controls for Network Analyzer
- * @author Adam Treister
- */
 @SuppressWarnings("serial")
 public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionListener, SetCurrentNetworkListener,
 		AddedNodesListener, AddedEdgesListener, RemovedNodesListener, RemovedEdgesListener,
@@ -152,11 +151,13 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		layout.setHorizontalGroup(layout.createParallelGroup(LEADING, true)
 			.addComponent(headerPanel, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
 			.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-			.addComponent(footerPanel, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE));
+			.addComponent(footerPanel, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+		);
 		layout.setVerticalGroup(layout.createSequentialGroup()
 			.addComponent(headerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addComponent(scrollPane, DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-			.addComponent(footerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
+			.addComponent(footerPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+		);
 
 		setResultString("");
 
@@ -417,10 +418,12 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		// The name is free to shrink, so a narrow panel clips the title instead of the button
 		layout.setHorizontalGroup(layout.createSequentialGroup()
 			.addComponent(networkName, 0, DEFAULT_SIZE, Short.MAX_VALUE)
-			.addComponent(newAnalysis, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE));
+			.addComponent(newAnalysis, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+		);
 		layout.setVerticalGroup(layout.createParallelGroup(CENTER)
 			.addComponent(networkName)
-			.addComponent(newAnalysis));
+			.addComponent(newAnalysis)
+		);
 
 		return panel;
 	}
@@ -481,7 +484,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 
 		return panel;
 	}
-
+	
 	/**
 	 * Runs the same task as Tools &rarr; Analyze Network, so the user gets the
 	 * "Analyze as Directed Graph?" dialog built from the task's tunables.
@@ -670,7 +673,23 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		var title = new JLabel(HEADER_TITLE);
 		title.setFont(title.getFont().deriveFont(Font.BOLD));
 
-		var statsTable = createStatsTable(stats);
+		// A few descriptions change with the interpretation, which the stored title records,
+		// so this does not depend on updateButtons() having run first
+		String netTitle = (String)stats.get("networkTitle");
+		boolean directed = netTitle != null && netTitle.endsWith(Msgs.DT_DIRECTED);
+
+		var rowKeys = new ArrayList<String>();
+		var statsTable = createStatsTable(stats, rowKeys);
+
+		var descriptionPanel = new DescriptionPanel();
+		descriptionPanel.showDescription(null, directed);
+		
+		statsTable.getSelectionModel().addListSelectionListener(evt -> {
+			if (evt.getValueIsAdjusting())
+				return;
+			int row = statsTable.getSelectedRow();
+			descriptionPanel.showDescription(row < 0 ? null : rowKeys.get(row), directed);
+		});
 
 		var time = stats.get("time");
 		var timeLabel = new JLabel(time == null ? "" : Msgs.get("time") + ": " + formatValue(time));
@@ -685,16 +704,20 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		var copyButton = createCopyButton(statsTable);
 		
 		LookAndFeelUtil.makeSmall(timeLabel, copyButton);
-
-		ParallelGroup horizontal = layout.createParallelGroup(LEADING, true)
+		
+		var horizontal = layout.createParallelGroup(LEADING, true)
 			.addGroup(layout.createSequentialGroup()
 				.addComponent(title, 0, DEFAULT_SIZE, Short.MAX_VALUE)
 				.addPreferredGap(ComponentPlacement.RELATED)
 				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			)
 			.addComponent(statsTable, 0, DEFAULT_SIZE, Short.MAX_VALUE)
-			.addComponent(timeLabel, 0, DEFAULT_SIZE, Short.MAX_VALUE);
-		SequentialGroup vertical = layout.createSequentialGroup()
+			.addComponent(timeLabel, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			// A tiny preferred width so the pane never dictates the panel width; its
+			// preferred height is managed by DescriptionPanel#updateDescriptionHeight()
+			.addComponent(descriptionPanel, 0, 10, Short.MAX_VALUE)
+		;
+		var vertical = layout.createSequentialGroup()
 			.addGroup(layout.createParallelGroup(CENTER)
 				.addComponent(title)
 				.addComponent(copyButton, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
@@ -702,13 +725,18 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 			.addPreferredGap(ComponentPlacement.UNRELATED)
 			.addComponent(statsTable, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
 			.addPreferredGap(ComponentPlacement.RELATED)
+			.addPreferredGap(ComponentPlacement.RELATED)
+			.addPreferredGap(ComponentPlacement.RELATED)
 			.addComponent(timeLabel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
-			.addPreferredGap(ComponentPlacement.UNRELATED);
-
+			.addPreferredGap(ComponentPlacement.UNRELATED)
+			.addComponent(descriptionPanel, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+			.addGap(10, 10, Short.MAX_VALUE)
+		;
+		
 		for (String info : EXTRA_INFO) {
 			// nobr keeps these on one line, so shrinking clips them instead of re-wrapping
 			// into a taller label than the layout reserved room for
-			JLabel bullet = new JLabel("<html><nobr>&#8226;&nbsp;" + info + "</nobr></html>");
+			var bullet = new JLabel("<html><nobr>&#8226;&nbsp;" + info + "</nobr></html>");
 			LookAndFeelUtil.makeSmall(bullet);
 			horizontal.addComponent(bullet, 0, DEFAULT_SIZE, Short.MAX_VALUE);
 			vertical.addComponent(bullet);
@@ -722,7 +750,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 		revalidate();
 		repaint();
 	}
-
+	
 	/**
 	 * Small icon button that puts the whole statistics table on the clipboard, for when the
 	 * user does not want to select the rows by hand.
@@ -757,9 +785,10 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 	/**
 	 * Two column, read-only table of statistics: names on the left, values right-aligned
 	 * against the right edge. Being a table, the rows can be selected and copied to the
-	 * clipboard with the usual select-all / copy keystrokes.
+	 * clipboard with the usual select-all / copy keystrokes. Fills <code>rowKeys</code>
+	 * with the statistic ID behind each row, in row order.
 	 */
-	private JTable createStatsTable(NetworkStats stats) {
+	private JTable createStatsTable(NetworkStats stats, List<String> rowKeys) {
 		var rows = new ArrayList<String[]>();
 
 		for (String key : stats.getKeys()) {
@@ -773,6 +802,7 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 				continue;
 
 			rows.add(new String[] { name, formatValue(val) });
+			rowKeys.add(key);
 		}
 
 		var model = new DefaultTableModel(rows.toArray(new String[rows.size()][]),
@@ -781,13 +811,25 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 			public boolean isCellEditable(int row, int column) {	return false;	}
 		};
 
-		var table = new JTable(model);
+		var table = new JTable(model) {
+			// The whole row answers for the statistic, so hovering the value works too
+			@Override
+			public String getToolTipText(MouseEvent event) {
+				int row = rowAtPoint(event.getPoint());
+				String doc = row < 0 ? null : StatsDoc.getShort(rowKeys.get(row));
+
+				// The fixed div width wraps long one-liners instead of letting them
+				// become a single very wide tooltip
+				return doc == null ? null : "<html><div style='width: 240px'>" + doc + "</div></html>";
+			}
+		};
 		table.setTableHeader(null);
 		table.setShowHorizontalLines(true);
 		table.setShowVerticalLines(false);
 		table.setGridColor(UIManager.getColor("Separator.foreground"));
 		table.setIntercellSpacing(new Dimension(0, 1));
-		table.setCellSelectionEnabled(true);
+		table.setRowSelectionAllowed(true);
+		table.setColumnSelectionAllowed(false);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setBackground(getBackground());
 
@@ -884,6 +926,108 @@ public class ResultsPanel extends JPanel implements CytoPanelComponent2, ActionL
 				return (((JViewport) getParent()).getHeight() > getPreferredSize().height);
 			}
 			return false;
+		}
+	}
+	
+	private static class DescriptionPanel extends JPanel {
+		
+		JEditorPane descriptionPane;
+		
+		DescriptionPanel() {
+			setOpaque(false);
+			setBorder(LookAndFeelUtil.createPanelBorder());
+		}
+		
+		/**
+		 * Read-only HTML pane under the statistics table that shows the description -- formula
+		 * included, when there is one -- of the selected statistic.
+		 */
+		JEditorPane getDescriptionPane() {
+			if (descriptionPane == null) {
+				descriptionPane = new JEditorPane();
+				descriptionPane.setContentType("text/html");
+				descriptionPane.setEditable(false);
+				descriptionPane.setFocusable(false);
+				descriptionPane.setOpaque(false);
+
+				// Have the HTML render in the pane's (label) font instead of the serif HTML default
+				descriptionPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+				
+				var labelFont = UIManager.getFont("Label.font");
+				
+				if (labelFont != null)
+					descriptionPane.setFont(labelFont);
+				
+				LookAndFeelUtil.makeSmall(descriptionPane);
+
+				// Where the text wraps depends on the panel width, so the height has to be
+				// re-measured whenever that width changes
+				descriptionPane.addComponentListener(new ComponentAdapter() {
+					@Override
+					public void componentResized(ComponentEvent event) {
+						updateDescriptionHeight();
+					}
+				});
+			}
+			
+			return descriptionPane;
+		}
+		
+		/** Shows the description of the given statistic, or the hint when none is selected. */
+		void showDescription(String key, boolean directed) {
+			String doc = key == null ? null : StatsDoc.getLong(key, directed);
+			var pane = getDescriptionPane();
+
+			if (doc == null) {
+				pane.setForeground(UIManager.getColor("Label.disabledForeground"));
+				pane.setText("<html><div style='text-align:center;'><br><i>Select a statistic above to see its description.</i><br><br></div></html>");
+			} else {
+				pane.setForeground(UIManager.getColor("Label.foreground"));
+				pane.setText("<html><b>" + Msgs.get(key) + "</b><br><br>" + doc + "</html>");
+			}
+
+			updateDescriptionHeight();
+			
+			this.removeAll();
+			
+			var layout = new GroupLayout(this);
+			this.setLayout(layout);
+			layout.setAutoCreateContainerGaps(true);
+			layout.setAutoCreateGaps(true);
+
+			// The name is free to shrink, so a narrow panel clips the title instead of the button
+			layout.setHorizontalGroup(layout.createSequentialGroup()
+				.addComponent(pane, 0, DEFAULT_SIZE, Short.MAX_VALUE)
+			);
+			layout.setVerticalGroup(layout.createParallelGroup(CENTER)
+				.addComponent(pane)
+			);
+		}
+		
+		/**
+		 * Pins the pane's preferred height to what its text needs at the pane's current width.
+		 * HTML only wraps at the width the component already has, while GroupLayout reserves
+		 * vertical room from the preferred size before that width exists -- room for a single
+		 * unwrapped line -- so without this the wrapped text would be clipped.
+		 */
+		private void updateDescriptionHeight() {
+			var pane = getDescriptionPane();
+			
+			int width = pane.getWidth();
+			if (width <= 0)
+				return;
+
+			var view = pane.getUI().getRootView(pane);
+			view.setSize(width, 0);
+			int height = (int)Math.ceil(view.getPreferredSpan(View.Y_AXIS));
+
+			// The width matches the tiny one the horizontal layout group pins, so the pane
+			// never widens the panel
+			var size = new Dimension(10, height);
+			if (!size.equals(pane.getPreferredSize())) {
+				pane.setPreferredSize(size);
+				pane.revalidate();
+			}
 		}
 	}
 }
